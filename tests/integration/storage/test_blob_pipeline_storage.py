@@ -63,6 +63,24 @@ async def test_dotprefix():
         storage._delete_container()  # noqa: SLF001
 
 
+async def test_find_respects_base_dir():
+    storage = BlobPipelineStorage(
+        connection_string=WELL_KNOWN_BLOB_STORAGE_KEY,
+        container_name="testbasedir",
+    )
+    try:
+        await storage.set("input/christmas.txt", "Merry Christmas!", encoding="utf-8")
+        await storage.set("inputfile/easter.txt", "Happy Easter!", encoding="utf-8")
+
+        items = list(
+            storage.find(base_dir="input", file_pattern=re.compile(r".*\.txt$"))
+        )
+        items = [item[0] for item in items]
+        assert items == ["input/christmas.txt"]
+    finally:
+        storage._delete_container()  # noqa: SLF001
+
+
 async def test_get_creation_date():
     storage = BlobPipelineStorage(
         connection_string=WELL_KNOWN_BLOB_STORAGE_KEY,

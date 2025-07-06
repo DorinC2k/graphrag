@@ -27,6 +27,7 @@ async def load_files(
     files = list(
         storage.find(
             re.compile(config.file_pattern),
+            base_dir=config.storage.base_dir,
             progress=progress,
             file_filter=config.file_filter,
         )
