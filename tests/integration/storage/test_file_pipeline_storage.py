@@ -36,6 +36,25 @@ async def test_find():
     assert output is None
 
 
+async def test_find_respects_base_dir(tmp_path):
+    storage = FilePipelineStorage(root_dir=str(tmp_path))
+
+    base_dir = "input"
+    (tmp_path / base_dir).mkdir()
+    (tmp_path / base_dir / "a.txt").write_text("A")
+    (tmp_path / f"{base_dir}file").mkdir()
+    (tmp_path / f"{base_dir}file" / "b.txt").write_text("B")
+
+    items = list(
+        storage.find(
+            base_dir=base_dir,
+            file_pattern=re.compile(r".*\.txt$"),
+        )
+    )
+    items = [item[0] for item in items]
+    assert items == [f"{base_dir}/a.txt"]
+
+
 async def test_get_creation_date():
     storage = FilePipelineStorage()
 

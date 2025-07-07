@@ -115,6 +115,14 @@ class BlobPipelineStorage(PipelineStorage):
                 An iterator of blob names and their corresponding regex matches.
         """
         base_dir = base_dir or ""
+        prefix_parts = []
+        if self._path_prefix:
+            prefix_parts.append(self._path_prefix.strip("/"))
+        if base_dir:
+            prefix_parts.append(base_dir.strip("/"))
+        prefix = "/".join(prefix_parts)
+        if prefix and not prefix.endswith("/"):
+            prefix += "/"
 
         log.info(
             "search container %s for files matching %s",
@@ -141,14 +149,16 @@ class BlobPipelineStorage(PipelineStorage):
             container_client = self._blob_service_client.get_container_client(
                 self._container_name
             )
-            all_blobs = list(container_client.list_blobs())
+            all_blobs = list(
+                container_client.list_blobs(name_starts_with=prefix)
+            )
 
             num_loaded = 0
-            num_total = len(list(all_blobs))
+            num_total = len(all_blobs)
             num_filtered = 0
             for blob in all_blobs:
                 match = file_pattern.search(blob.name)
-                if match and blob.name.startswith(base_dir):
+                if match:
                     group = match.groupdict()
                     if item_filter(group):
                         yield (_blobname(blob.name), group)
