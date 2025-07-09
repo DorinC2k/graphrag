@@ -102,3 +102,24 @@ def test_clear():
         assert vector_store._database_exists() is False  # noqa: SLF001
     finally:
         pass
+
+
+def test_clear_on_failed_connection(monkeypatch):
+    """Ensure clear succeeds when connect fails."""
+    vector_store = CosmosDBVectorStore(collection_name="failed")
+
+    def fail_create_database(self) -> None:
+        """Simulate connection failure."""
+        msg = "connect failed"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(CosmosDBVectorStore, "_create_database", fail_create_database)
+
+    with pytest.raises(RuntimeError, match="connect failed"):
+        vector_store.connect(
+            connection_string=WELL_KNOWN_COSMOS_CONNECTION_STRING,
+            database_name="failed",
+        )
+
+    # Should not raise
+    vector_store.clear()
