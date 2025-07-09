@@ -5,9 +5,12 @@
 These tests will test the StorageFactory class and the creation of each storage type that is natively supported.
 """
 
-import sys
-
 import pytest
+
+from tests.integration.storage.conftest import (
+    require_blob_emulator,
+    require_cosmos_emulator,
+)
 
 from graphrag.config.enums import StorageType
 from graphrag.storage.blob_pipeline_storage import BlobPipelineStorage
@@ -23,6 +26,7 @@ WELL_KNOWN_COSMOS_CONNECTION_STRING = "AccountEndpoint=https://127.0.0.1:8081/;A
 
 
 def test_create_blob_storage():
+    require_blob_emulator()
     kwargs = {
         "type": "blob",
         "connection_string": WELL_KNOWN_BLOB_STORAGE_KEY,
@@ -33,11 +37,8 @@ def test_create_blob_storage():
     assert isinstance(storage, BlobPipelineStorage)
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("win"),
-    reason="cosmosdb emulator is only available on windows runners at this time",
-)
 def test_create_cosmosdb_storage():
+    require_cosmos_emulator()
     kwargs = {
         "type": "cosmosdb",
         "connection_string": WELL_KNOWN_COSMOS_CONNECTION_STRING,
