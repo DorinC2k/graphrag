@@ -5,6 +5,10 @@
 import re
 from datetime import datetime
 
+from tests.integration.storage.conftest import require_blob_emulator
+
+require_blob_emulator()
+
 from graphrag.storage.blob_pipeline_storage import BlobPipelineStorage
 
 # cspell:disable-next-line well-known-key
