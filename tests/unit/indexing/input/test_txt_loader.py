@@ -20,6 +20,7 @@ async def test_txt_loader_one_file():
     documents = await create_input(config=config, storage=storage)
     assert documents.shape == (1, 4)
     assert documents["title"].iloc[0] == "input.txt"
+    assert not documents["title"].iloc[0].startswith(config.storage.base_dir)
 
 
 async def test_txt_loader_one_file_with_metadata():
