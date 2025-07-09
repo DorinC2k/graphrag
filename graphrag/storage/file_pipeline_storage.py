@@ -4,7 +4,6 @@
 """A module containing 'FileStorage' and 'FilePipelineStorage' models."""
 
 import logging
-import os
 import re
 import shutil
 from collections.abc import Iterator
@@ -55,7 +54,20 @@ class FilePipelineStorage(PipelineStorage):
                 re.search(value, item[key]) for key, value in file_filter.items()
             )
 
-        search_path = Path(self._root_dir) / (base_dir or "")
+        root_path = Path(self._root_dir).resolve()
+        base_path = Path(base_dir) if base_dir is not None else None
+
+        if base_path is None:
+            search_path = root_path
+        else:
+            resolved_base = base_path.resolve()
+            if resolved_base == root_path:
+                search_path = root_path
+            elif base_path.is_absolute():
+                search_path = resolved_base
+            else:
+                search_path = root_path / base_path
+
         log.info("search %s for files matching %s", search_path, file_pattern.pattern)
         all_files = list(search_path.rglob("**/*"))
         num_loaded = 0
@@ -66,8 +78,8 @@ class FilePipelineStorage(PipelineStorage):
             if match:
                 group = match.groupdict()
                 if item_filter(group):
-                    filename = f"{file}".replace(self._root_dir, "")
-                    if filename.startswith(os.sep):
+                    filename = Path(file).as_posix().replace(root_path.as_posix(), "")
+                    if filename.startswith("/"):
                         filename = filename[1:]
                     yield (filename, group)
                     num_loaded += 1

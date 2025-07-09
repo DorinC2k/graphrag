@@ -20,6 +20,7 @@ async def test_json_loader_one_file_one_object():
     documents = await create_input(config=config, storage=storage)
     assert documents.shape == (1, 4)
     assert documents["title"].iloc[0] == "input.json"
+    assert not documents["title"].iloc[0].startswith(config.storage.base_dir)
 
 
 async def test_json_loader_one_file_multiple_objects():
@@ -35,6 +36,7 @@ async def test_json_loader_one_file_multiple_objects():
     print(documents)
     assert documents.shape == (3, 4)
     assert documents["title"].iloc[0] == "input.json"
+    assert not documents["title"].iloc[0].startswith(config.storage.base_dir)
 
 
 async def test_json_loader_one_file_with_title():
