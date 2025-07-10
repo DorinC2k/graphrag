@@ -1,0 +1,39 @@
+# CLI-based GraphRAG workflow — use shell scripts or direct CLI commands
+
+# These Python files are no longer needed, as the CLI will be used exclusively:
+# - init-graphrag.py
+# - tune-prompts.py
+# - index-graphrag.py
+# - query.py
+
+# ✅ Recommended CLI Commands:
+# The configuration pulls input files from the Azure container `law-cases`.
+# Set `AZURE_STORAGE_CONNECTION_STRING` in `.env` before running.
+
+# 1. Initialize configuration (optional if settings.yml already exists)
+graphrag init --root try1
+
+# 2. Tune prompts based on your documents
+graphrag prompt-tune --root try1
+
+# 3. Index all PDFs/JSONs into a graph
+graphrag index --root try1 --force
+
+# 4. Interactively query the index
+graphrag query --root try1
+
+# 📁 Make sure the following files exist in your --root folder:
+# - settings.graphrag.yml
+# - .env (with GRAPHRAG_API_KEY or OPENAI_API_KEY)
+# - AZURE_STORAGE_CONNECTION_STRING if using blob storage
+# - your PDFs and JSON documents (recursively loaded)
+
+# Optional: Create a shell script to run all steps in order
+
+# File: run-graphrag.sh
+# #!/bin/bash
+# ROOT=try1
+# graphrag prompt-tune --root "$ROOT"
+# graphrag index --root "$ROOT"
+# graphrag query --root "$ROOT"
+# C:\Users\dorin\AppData\Roaming\pypoetry\venv\Scripts
