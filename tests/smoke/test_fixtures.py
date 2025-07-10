@@ -30,6 +30,19 @@ WELL_KNOWN_AZURITE_CONNECTION_STRING = "DefaultEndpointsProtocol=http;AccountNam
 
 KNOWN_WARNINGS = [NO_COMMUNITY_RECORDS_WARNING]
 
+# Environment variables used in the smoke tests.
+env_vars = {
+    "BLOB_STORAGE_CONNECTION_STRING": os.getenv(
+        "GRAPHRAG_CACHE_CONNECTION_STRING", WELL_KNOWN_AZURITE_CONNECTION_STRING
+    ),
+    "LOCAL_BLOB_STORAGE_CONNECTION_STRING": WELL_KNOWN_AZURITE_CONNECTION_STRING,
+    "GRAPHRAG_CHUNK_SIZE": "1200",
+    "GRAPHRAG_CHUNK_OVERLAP": "0",
+    "AZURE_AI_SEARCH_URL_ENDPOINT": os.getenv("AZURE_AI_SEARCH_URL_ENDPOINT"),
+    "AZURE_AI_SEARCH_API_KEY": os.getenv("AZURE_AI_SEARCH_API_KEY"),
+}
+env_vars = {k: v for k, v in env_vars.items() if v is not None}
+
 
 def _load_fixtures():
     """Load all fixtures from the tests/data folder."""
@@ -222,21 +235,7 @@ class TestIndexer:
         return subprocess.run(command, capture_output=True, text=True)
 
     @cleanup(skip=debug)
-    @mock.patch.dict(
-        os.environ,
-        {
-            **os.environ,
-            "BLOB_STORAGE_CONNECTION_STRING": os.getenv(
-                "GRAPHRAG_CACHE_CONNECTION_STRING", WELL_KNOWN_AZURITE_CONNECTION_STRING
-            ),
-            "LOCAL_BLOB_STORAGE_CONNECTION_STRING": WELL_KNOWN_AZURITE_CONNECTION_STRING,
-            "GRAPHRAG_CHUNK_SIZE": "1200",
-            "GRAPHRAG_CHUNK_OVERLAP": "0",
-            "AZURE_AI_SEARCH_URL_ENDPOINT": os.getenv("AZURE_AI_SEARCH_URL_ENDPOINT"),
-            "AZURE_AI_SEARCH_API_KEY": os.getenv("AZURE_AI_SEARCH_API_KEY"),
-        },
-        clear=True,
-    )
+    @mock.patch.dict(os.environ, env_vars, clear=True)
     @pytest.mark.timeout(800)
     def test_fixture(
         self,
