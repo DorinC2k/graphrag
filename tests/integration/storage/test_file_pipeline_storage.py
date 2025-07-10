@@ -24,7 +24,10 @@ async def test_find():
             file_filter=None,
         )
     )
-    assert items == [(str(Path("tests/fixtures/text/input/dulce.txt")), {})]
+    assert items == [(
+        Path("tests/fixtures/text/input/dulce.txt").as_posix(),
+        {},
+    )]
     output = await storage.get("tests/fixtures/text/input/dulce.txt")
     assert len(output) > 0
 
