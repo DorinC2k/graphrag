@@ -7,17 +7,16 @@ These tests will test the StorageFactory class and the creation of each storage 
 
 import pytest
 
-from tests.integration.storage.conftest import (
-    require_blob_emulator,
-    require_cosmos_emulator,
-)
-
 from graphrag.config.enums import StorageType
 from graphrag.storage.blob_pipeline_storage import BlobPipelineStorage
 from graphrag.storage.cosmosdb_pipeline_storage import CosmosDBPipelineStorage
 from graphrag.storage.factory import StorageFactory
 from graphrag.storage.file_pipeline_storage import FilePipelineStorage
 from graphrag.storage.memory_pipeline_storage import MemoryPipelineStorage
+from tests.integration.storage.conftest import (
+    require_blob_emulator,
+    require_cosmos_emulator,
+)
 
 # cspell:disable-next-line well-known-key
 WELL_KNOWN_BLOB_STORAGE_KEY = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"

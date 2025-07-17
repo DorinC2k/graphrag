@@ -76,6 +76,18 @@ Some unit and smoke tests use Azurite to emulate Azure resources. This can be st
 
 or by simply running `azurite` in the terminal if already installed globally. See the [Azurite documentation](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite) for more information about how to install and use Azurite.
 
+# Cosmos DB Emulator
+
+Integration tests that use the `CosmosDBVectorStore` require the Azure Cosmos DB
+Emulator. You can start the emulator using Docker with the helper script:
+
+```sh
+./scripts/start-cosmos-emulator.sh
+```
+
+This runs the emulator with ports `8081` and `10250-10255` exposed and data
+persistence enabled.
+
 # Lifecycle Scripts
 
 Our Python package utilizes Poetry to manage dependencies and [poethepoet](https://pypi.org/project/poethepoet/) to manage custom build scripts.
