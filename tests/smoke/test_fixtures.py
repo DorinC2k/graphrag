@@ -6,6 +6,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
@@ -40,6 +41,17 @@ env_vars = {
     "GRAPHRAG_CHUNK_OVERLAP": "0",
     "AZURE_AI_SEARCH_URL_ENDPOINT": os.getenv("AZURE_AI_SEARCH_URL_ENDPOINT"),
     "AZURE_AI_SEARCH_API_KEY": os.getenv("AZURE_AI_SEARCH_API_KEY"),
+    "GRAPHRAG_LLM_TYPE": "openai_chat",
+    "GRAPHRAG_EMBEDDING_TYPE": "openai_embedding",
+    "GRAPHRAG_API_KEY": "test-key",
+    "GRAPHRAG_API_BASE": "https://example.com",
+    "GRAPHRAG_API_VERSION": "v1",
+    "GRAPHRAG_LLM_DEPLOYMENT_NAME": "test-llm",
+    "GRAPHRAG_LLM_MODEL": "gpt-4",
+    "GRAPHRAG_LLM_TPM": "1000",
+    "GRAPHRAG_LLM_RPM": "1000",
+    "GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME": "test-embed",
+    "GRAPHRAG_EMBEDDING_MODEL": "text-embedding-ada-002",
 }
 env_vars = {k: v for k, v in env_vars.items() if v is not None}
 
@@ -143,9 +155,9 @@ class TestIndexer:
         input_file_type: str,
     ):
         command = [
-            "poetry",
-            "run",
-            "poe",
+            sys.executable,
+            "-m",
+            "graphrag",
             "index",
             "--verbose" if debug else None,
             "--root",
