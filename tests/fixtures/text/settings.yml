@@ -27,10 +27,10 @@ models:
 
 vector_store:
   default_vector_store:
-    type: "azure_ai_search"
-    url: ${AZURE_AI_SEARCH_URL_ENDPOINT}
-    api_key: ${AZURE_AI_SEARCH_API_KEY}
-    container_name: "simple_text_ci"
+    type: "lancedb"
+    db_uri: "./tests/fixtures/text/lancedb"
+    container_name: "text_lancedb_ci"
+    overwrite: True
 
 extract_claims:
   enabled: true
@@ -47,3 +47,7 @@ drift_search:
   n_depth: 1
   drift_k_followups: 3
   primer_folds: 3
+
+embed_text:
+  strategy:
+    type: "mock"
