@@ -123,5 +123,8 @@ In the right panel you have several functionalities.
 ##### Graph Explorer tab
 ![Graph Explorer tab](images/image-4.png)
 
+## Medication Entry
+The application now supports adding medication details by uploading a photo of the medication package. The image is processed with OCR to read the printed text and extract information like the drug name and expiration date. Any missing fields, such as the active ingredient, are filled in using the OpenAI API.
+
 
 

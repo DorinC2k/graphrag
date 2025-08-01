@@ -17,6 +17,8 @@ altair = "^5.3.0"
 streamlit-agraph = "^0.0.45"
 st-tabs = "^0.1.1"
 spacy = ">=3.8.4,<4.0.0"
+pillow = "^10.4.0"
+pytesseract = "^0.3.10"
 
 [tool.poetry.group.dev.dependencies]
 poethepoet = "^0.26.1"
