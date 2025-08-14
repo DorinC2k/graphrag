@@ -12,14 +12,12 @@ from typing import Any
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient
 
-from graphrag.logger.base import ProgressLogger
-from graphrag.logger.progress import Progress
 from graphrag.storage.pipeline_storage import (
     PipelineStorage,
     get_timestamp_formatted_with_local_tz,
 )
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class BlobPipelineStorage(PipelineStorage):
@@ -66,7 +64,7 @@ class BlobPipelineStorage(PipelineStorage):
             if storage_account_blob_url
             else None
         )
-        log.info(
+        logger.info(
             "creating blob storage at container=%s, path=%s",
             self._container_name,
             self._path_prefix,
@@ -101,7 +99,6 @@ class BlobPipelineStorage(PipelineStorage):
         self,
         file_pattern: re.Pattern[str],
         base_dir: str | None = None,
-        progress: ProgressLogger | None = None,
         file_filter: dict[str, Any] | None = None,
         max_count=-1,
     ) -> Iterator[tuple[str, dict[str, Any]]]:
@@ -127,7 +124,7 @@ class BlobPipelineStorage(PipelineStorage):
         if prefix and not prefix.endswith("/"):
             prefix += "/"
 
-        log.info(
+        logger.info(
             "search container %s for files matching %s",
             self._container_name,
             file_pattern.pattern,
@@ -172,12 +169,14 @@ class BlobPipelineStorage(PipelineStorage):
                         num_filtered += 1
                 else:
                     num_filtered += 1
-                if progress is not None:
-                    progress(
-                        _create_progress_status(num_loaded, num_filtered, num_total)
-                    )
+                logger.debug(
+                    "Blobs loaded: %d, filtered: %d, total: %d",
+                    num_loaded,
+                    num_filtered,
+                    num_total,
+                )
         except Exception:
-            log.exception(
+            logger.exception(
                 "Error finding blobs: base_dir=%s, file_pattern=%s, file_filter=%s",
                 base_dir,
                 file_pattern,
@@ -200,7 +199,7 @@ class BlobPipelineStorage(PipelineStorage):
                 coding = encoding or self._encoding
                 blob_data = blob_data.decode(coding)
         except Exception:
-            log.exception("Error getting key %s", key)
+            logger.exception("Error getting key %s", key)
             return None
         else:
             return blob_data
@@ -219,7 +218,7 @@ class BlobPipelineStorage(PipelineStorage):
                 coding = encoding or self._encoding
                 blob_client.upload_blob(value.encode(coding), overwrite=True)
         except Exception:
-            log.exception("Error setting key %s: %s", key)
+            logger.exception("Error setting key %s: %s", key)
 
     def _set_df_json(self, key: str, dataframe: Any) -> None:
         """Set a json dataframe."""
@@ -318,7 +317,7 @@ class BlobPipelineStorage(PipelineStorage):
             timestamp = blob_client.download_blob().properties.creation_time
             return get_timestamp_formatted_with_local_tz(timestamp)
         except Exception:
-            log.exception("Error getting key %s", key)
+            logger.exception("Error getting key %s", key)
             return ""
 
 
@@ -328,7 +327,7 @@ def create_blob_storage(**kwargs: Any) -> PipelineStorage:
     storage_account_blob_url = kwargs.get("storage_account_blob_url")
     base_dir = kwargs.get("base_dir")
     container_name = kwargs["container_name"]
-    log.info("Creating blob storage at %s", container_name)
+    logger.info("Creating blob storage at %s", container_name)
     if container_name is None:
         msg = "No container name provided for blob storage."
         raise ValueError(msg)
@@ -394,13 +393,3 @@ def validate_blob_container_name(container_name: str):
         )
 
     return True
-
-
-def _create_progress_status(
-    num_loaded: int, num_filtered: int, num_total: int
-) -> Progress:
-    return Progress(
-        total_items=num_total,
-        completed_items=num_loaded + num_filtered,
-        description=f"{num_loaded} files loaded ({num_filtered} filtered)",
-    )

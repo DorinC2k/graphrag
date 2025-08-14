@@ -4,6 +4,7 @@
 """A module containing 'FileStorage' and 'FilePipelineStorage' models."""
 
 import logging
+import os
 import re
 import shutil
 from collections.abc import Iterator
@@ -22,7 +23,7 @@ from graphrag.storage.pipeline_storage import (
     get_timestamp_formatted_with_local_tz,
 )
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class FilePipelineStorage(PipelineStorage):
@@ -41,7 +42,6 @@ class FilePipelineStorage(PipelineStorage):
         self,
         file_pattern: re.Pattern[str],
         base_dir: str | None = None,
-        progress: ProgressLogger | None = None,
         file_filter: dict[str, Any] | None = None,
         max_count=-1,
     ) -> Iterator[tuple[str, dict[str, Any]]]:
@@ -78,8 +78,8 @@ class FilePipelineStorage(PipelineStorage):
             if match:
                 group = match.groupdict()
                 if item_filter(group):
-                    filename = Path(file).as_posix().replace(root_path.as_posix(), "")
-                    if filename.startswith("/"):
+                    filename = f"{file}".replace(self._root_dir, "")
+                    if filename.startswith(os.sep):
                         filename = filename[1:]
                     yield (filename, group)
                     num_loaded += 1
@@ -181,7 +181,7 @@ def join_path(file_path: str, file_name: str) -> Path:
 def create_file_storage(**kwargs: Any) -> PipelineStorage:
     """Create a file based storage."""
     base_dir = kwargs["base_dir"]
-    log.info("Creating file storage at %s", base_dir)
+    logger.info("Creating file storage at %s", base_dir)
     return FilePipelineStorage(root_dir=base_dir)
 
 

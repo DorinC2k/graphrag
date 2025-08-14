@@ -27,6 +27,7 @@ log = logging.getLogger(__name__)
 debug = os.environ.get("DEBUG") is not None
 gh_pages = os.environ.get("GH_PAGES") is not None
 
+# cspell:disable-next-line well-known-key
 WELL_KNOWN_AZURITE_CONNECTION_STRING = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1"
 
 KNOWN_WARNINGS = [NO_COMMUNITY_RECORDS_WARNING]
@@ -96,6 +97,8 @@ def pytest_generate_tests(metafunc):
 
 
 def cleanup(skip: bool = False):
+    """Decorator to cleanup the output and cache folders after each test."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -171,15 +174,82 @@ class TestIndexer:
         command = [arg for arg in command if arg]
         log.info("Command: %s", " ".join(command))
 
-        env = os.environ.copy()
-        env["GRAPHRAG_INPUT_FILE_TYPE"] = input_file_type
+        # Check all workflows run
+        expected_workflows = set(workflow_config.keys())
+        workflows = set(stats["workflows"].keys())
+        assert workflows == expected_workflows, (
+            f"Workflows missing from stats.json: {expected_workflows - workflows}. Unexpected workflows in stats.json: {workflows - expected_workflows}"
+        )
 
-        completion = subprocess.run(command, env=env)
-        log.debug("Subprocess completed with return code: %d", completion.returncode)
-        assert completion.returncode == 0, f"Indexer failed with return code: {completion.returncode}"
+        # [OPTIONAL] Check runtime
+        for workflow, config in workflow_config.items():
+            # Check expected artifacts
+            workflow_artifacts = config.get("expected_artifacts", [])
+            # Check max runtime
+            max_runtime = config.get("max_runtime", None)
+            if max_runtime:
+                assert stats["workflows"][workflow]["overall"] <= max_runtime, (
+                    f"Expected max runtime of {max_runtime}, found: {stats['workflows'][workflow]['overall']} for workflow: {workflow}"
+                )
+            # Check expected artifacts
+            for artifact in workflow_artifacts:
+                if artifact.endswith(".parquet"):
+                    output_df = pd.read_parquet(output_path / artifact)
+
+                    # Check number of rows between range
+                    assert (
+                        config["row_range"][0]
+                        <= len(output_df)
+                        <= config["row_range"][1]
+                    ), (
+                        f"Expected between {config['row_range'][0]} and {config['row_range'][1]}, found: {len(output_df)} for file: {artifact}"
+                    )
+
+                    # Get non-nan rows
+                    nan_df = output_df.loc[
+                        :,
+                        ~output_df.columns.isin(config.get("nan_allowed_columns", [])),
+                    ]
+                    nan_df = nan_df[nan_df.isna().any(axis=1)]
+                    assert len(nan_df) == 0, (
+                        f"Found {len(nan_df)} rows with NaN values for file: {artifact} on columns: {nan_df.columns[nan_df.isna().any()].tolist()}"
+                    )
+
+    def __run_query(self, root: Path, query_config: dict[str, str]):
+        command = [
+            "poetry",
+            "run",
+            "poe",
+            "query",
+            "--root",
+            root.resolve().as_posix(),
+            "--method",
+            query_config["method"],
+            "--community-level",
+            str(query_config.get("community_level", 2)),
+            "--query",
+            query_config["query"],
+        ]
+
+        log.info("running command ", " ".join(command))
+        return subprocess.run(command, capture_output=True, text=True)
 
     @cleanup(skip=debug)
-    @mock.patch.dict(os.environ, env_vars)
+    @mock.patch.dict(
+        os.environ,
+        {
+            **os.environ,
+            "BLOB_STORAGE_CONNECTION_STRING": os.getenv(
+                "GRAPHRAG_CACHE_CONNECTION_STRING", WELL_KNOWN_AZURITE_CONNECTION_STRING
+            ),
+            "LOCAL_BLOB_STORAGE_CONNECTION_STRING": WELL_KNOWN_AZURITE_CONNECTION_STRING,
+            "GRAPHRAG_CHUNK_SIZE": "1200",
+            "GRAPHRAG_CHUNK_OVERLAP": "0",
+            "AZURE_AI_SEARCH_URL_ENDPOINT": os.getenv("AZURE_AI_SEARCH_URL_ENDPOINT"),
+            "AZURE_AI_SEARCH_API_KEY": os.getenv("AZURE_AI_SEARCH_API_KEY"),
+        },
+        clear=True,
+    )
     @pytest.mark.timeout(800)
     def test_fixture(self, input_path: str, input_file_type: str, workflow_config: dict[str, dict[str, Any]], query_config: list[dict[str, str]]):
         log.info("Starting test_fixture with input_path=%s, input_file_type=%s", input_path, input_file_type)
@@ -199,9 +269,21 @@ class TestIndexer:
 
         print("running indexer")
         self.__run_indexer(root, input_file_type)
+        print("indexer complete")
 
         if dispose:
             log.info("Cleaning up Azure container")
             dispose()
 
-        log.info("test_fixture completed successfully for: %s", input_path)
+        if not workflow_config.get("skip_assert"):
+            print("performing dataset assertions")
+            self.__assert_indexer_outputs(root, workflow_config)
+
+        print("running queries")
+        for query in query_config:
+            result = self.__run_query(root, query)
+            print(f"Query: {query}\nResponse: {result.stdout}")
+
+            assert result.returncode == 0, "Query failed"
+            assert result.stdout is not None, "Query returned no output"
+            assert len(result.stdout) > 0, "Query returned empty output"

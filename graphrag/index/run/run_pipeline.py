@@ -7,9 +7,9 @@ import json
 import logging
 import re
 import time
-import traceback
 from collections.abc import AsyncIterable
 from dataclasses import asdict
+from typing import Any
 
 from graphrag.callbacks.workflow_callbacks import WorkflowCallbacks
 from graphrag.config.models.graph_rag_config import GraphRagConfig
@@ -17,21 +17,19 @@ from graphrag.index.run.utils import create_run_context
 from graphrag.index.typing.context import PipelineRunContext
 from graphrag.index.typing.pipeline import Pipeline
 from graphrag.index.typing.pipeline_run_result import PipelineRunResult
-from graphrag.logger.base import ProgressLogger
-from graphrag.logger.progress import Progress
 from graphrag.storage.pipeline_storage import PipelineStorage
 from graphrag.utils.api import create_cache_from_config, create_storage_from_config
 from graphrag.utils.storage import load_table_from_storage, write_table_to_storage
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 async def run_pipeline(
     pipeline: Pipeline,
     config: GraphRagConfig,
     callbacks: WorkflowCallbacks,
-    logger: ProgressLogger,
     is_update_run: bool = False,
+    additional_context: dict[str, Any] | None = None,
 ) -> AsyncIterable[PipelineRunResult]:
     """Run all workflows using a simplified pipeline."""
     root_dir = config.root_dir
@@ -43,6 +41,9 @@ async def run_pipeline(
     # load existing state in case any workflows are stateful
     state_json = await output_storage.get("context.json")
     state = json.loads(state_json) if state_json else {}
+
+    if additional_context:
+        state.setdefault("additional_context", {}).update(additional_context)
 
     if is_update_run:
         logger.info("Running incremental indexing.")
@@ -66,7 +67,6 @@ async def run_pipeline(
             cache=cache,
             callbacks=callbacks,
             state=state,
-            progress_logger=logger,
         )
 
     else:
@@ -78,13 +78,11 @@ async def run_pipeline(
             cache=cache,
             callbacks=callbacks,
             state=state,
-            progress_logger=logger,
         )
 
     async for table in _run_pipeline(
         pipeline=pipeline,
         config=config,
-        logger=logger,
         context=context,
     ):
         yield table
@@ -93,7 +91,6 @@ async def run_pipeline(
 async def _run_pipeline(
     pipeline: Pipeline,
     config: GraphRagConfig,
-    logger: ProgressLogger,
     context: PipelineRunContext,
 ) -> AsyncIterable[PipelineRunResult]:
     start_time = time.time()
@@ -103,13 +100,12 @@ async def _run_pipeline(
     try:
         await _dump_json(context)
 
+        logger.info("Executing pipeline...")
         for name, workflow_function in pipeline.run():
             last_workflow = name
-            progress = logger.child(name, transient=False)
             context.callbacks.workflow_start(name, None)
             work_time = time.time()
             result = await workflow_function(config, context)
-            progress(Progress(percent=1))
             context.callbacks.workflow_end(name, result)
             yield PipelineRunResult(
                 workflow=name, result=result.result, state=context.state, errors=None
@@ -120,11 +116,11 @@ async def _run_pipeline(
                 break
 
         context.stats.total_runtime = time.time() - start_time
+        logger.info("Indexing pipeline complete.")
         await _dump_json(context)
 
     except Exception as e:
-        log.exception("error running workflow %s", last_workflow)
-        context.callbacks.error("Error running pipeline!", e, traceback.format_exc())
+        logger.exception("error running workflow %s", last_workflow)
         yield PipelineRunResult(
             workflow=last_workflow, result=None, state=context.state, errors=[e]
         )
@@ -135,9 +131,17 @@ async def _dump_json(context: PipelineRunContext) -> None:
     await context.output_storage.set(
         "stats.json", json.dumps(asdict(context.stats), indent=4, ensure_ascii=False)
     )
-    await context.output_storage.set(
-        "context.json", json.dumps(context.state, indent=4, ensure_ascii=False)
-    )
+    # Dump context state, excluding additional_context
+    temp_context = context.state.pop(
+        "additional_context", None
+    )  # Remove reference only, as object size is uncertain
+    try:
+        state_blob = json.dumps(context.state, indent=4, ensure_ascii=False)
+    finally:
+        if temp_context:
+            context.state["additional_context"] = temp_context
+
+    await context.output_storage.set("context.json", state_blob)
 
 
 async def _copy_previous_output(
