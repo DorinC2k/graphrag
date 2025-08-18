@@ -54,5 +54,7 @@ docsite/
 # PyCharm
 .idea/
 
+# python venvs
+*.venv*
 # Jupyter notebook
 .ipynb_checkpoints/
