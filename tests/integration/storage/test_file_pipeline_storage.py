@@ -24,7 +24,12 @@ async def test_find():
             file_filter=None,
         )
     )
-    assert items == [(str(Path("tests/fixtures/text/input/dulce.txt")), {})]
+    assert items == [
+        (
+            Path("tests/fixtures/text/input/dulce.txt").as_posix(),
+            {},
+        )
+    ]
     output = await storage.get("tests/fixtures/text/input/dulce.txt")
     assert len(output) > 0
 
@@ -36,7 +41,7 @@ async def test_find():
     assert output is None
 
 
-async def test_find_respects_base_dir(tmp_path):
+def test_find_respects_base_dir(tmp_path):
     storage = FilePipelineStorage(root_dir=str(tmp_path))
 
     base_dir = "input"

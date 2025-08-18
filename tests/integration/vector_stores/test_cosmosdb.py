@@ -3,22 +3,17 @@
 
 """Integration tests for CosmosDB vector store implementation."""
 
-import sys
-
 import numpy as np
 import pytest
 
 from graphrag.vector_stores.base import VectorStoreDocument
 from graphrag.vector_stores.cosmosdb import CosmosDBVectorStore
+from tests.integration.storage.conftest import require_cosmos_emulator
 
 # cspell:disable-next-line well-known-key
 WELL_KNOWN_COSMOS_CONNECTION_STRING = "AccountEndpoint=https://127.0.0.1:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
 
-# the cosmosdb emulator is only available on windows runners at this time
-if not sys.platform.startswith("win"):
-    pytest.skip(
-        "encountered windows-only tests -- will skip for now", allow_module_level=True
-    )
+require_cosmos_emulator()
 
 
 def test_vector_store_operations():
@@ -102,3 +97,24 @@ def test_clear():
         assert vector_store._database_exists() is False  # noqa: SLF001
     finally:
         pass
+
+
+def test_clear_on_failed_connection(monkeypatch):
+    """Ensure clear succeeds when connect fails."""
+    vector_store = CosmosDBVectorStore(collection_name="failed")
+
+    def fail_create_database(self) -> None:
+        """Simulate connection failure."""
+        msg = "connect failed"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(CosmosDBVectorStore, "_create_database", fail_create_database)
+
+    with pytest.raises(RuntimeError, match="connect failed"):
+        vector_store.connect(
+            connection_string=WELL_KNOWN_COSMOS_CONNECTION_STRING,
+            database_name="failed",
+        )
+
+    # Should not raise
+    vector_store.clear()

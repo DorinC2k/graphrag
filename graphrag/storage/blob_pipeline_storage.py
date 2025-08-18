@@ -56,7 +56,10 @@ class BlobPipelineStorage(PipelineStorage):
         self._encoding = encoding
         self._container_name = container_name
         self._connection_string = connection_string
-        self._path_prefix = path_prefix or ""
+        sanitized_prefix = path_prefix or ""
+        if sanitized_prefix in {".", "./"}:
+            sanitized_prefix = ""
+        self._path_prefix = sanitized_prefix.strip("/")
         self._storage_account_blob_url = storage_account_blob_url
         self._storage_account_name = (
             storage_account_blob_url.split("//")[1].split(".")[0]

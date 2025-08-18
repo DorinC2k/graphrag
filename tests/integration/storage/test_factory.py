@@ -5,8 +5,6 @@
 These tests will test the StorageFactory class and the creation of each storage type that is natively supported.
 """
 
-import sys
-
 import pytest
 
 from graphrag.config.enums import StorageType
@@ -15,6 +13,10 @@ from graphrag.storage.cosmosdb_pipeline_storage import CosmosDBPipelineStorage
 from graphrag.storage.factory import StorageFactory
 from graphrag.storage.file_pipeline_storage import FilePipelineStorage
 from graphrag.storage.memory_pipeline_storage import MemoryPipelineStorage
+from tests.integration.storage.conftest import (
+    require_blob_emulator,
+    require_cosmos_emulator,
+)
 
 # cspell:disable-next-line well-known-key
 WELL_KNOWN_BLOB_STORAGE_KEY = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
@@ -23,6 +25,7 @@ WELL_KNOWN_COSMOS_CONNECTION_STRING = "AccountEndpoint=https://127.0.0.1:8081/;A
 
 
 def test_create_blob_storage():
+    require_blob_emulator()
     kwargs = {
         "type": "blob",
         "connection_string": WELL_KNOWN_BLOB_STORAGE_KEY,
@@ -33,11 +36,8 @@ def test_create_blob_storage():
     assert isinstance(storage, BlobPipelineStorage)
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("win"),
-    reason="cosmosdb emulator is only available on windows runners at this time",
-)
 def test_create_cosmosdb_storage():
+    require_cosmos_emulator()
     kwargs = {
         "type": "cosmosdb",
         "connection_string": WELL_KNOWN_COSMOS_CONNECTION_STRING,

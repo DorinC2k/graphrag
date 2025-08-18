@@ -68,6 +68,8 @@ class CosmosDBVectorStore(BaseVectorStore):
 
     def _delete_database(self) -> None:
         """Delete the database if it exists."""
+        if not hasattr(self, "_database_client"):
+            return
         if self._database_exists():
             self._cosmos_client.delete_database(self._database_name)
 
@@ -132,6 +134,10 @@ class CosmosDBVectorStore(BaseVectorStore):
 
     def _delete_container(self) -> None:
         """Delete the vector store container in the database if it exists."""
+        if not hasattr(self, "_database_client") or not hasattr(
+            self, "_container_client"
+        ):
+            return
         if self._container_exists():
             self._database_client.delete_container(self._container_name)
 
@@ -267,5 +273,9 @@ class CosmosDBVectorStore(BaseVectorStore):
 
     def clear(self) -> None:
         """Clear the vector store."""
+        if not hasattr(self, "_container_client") or not hasattr(
+            self, "_database_client"
+        ):
+            return
         self._delete_container()
         self._delete_database()

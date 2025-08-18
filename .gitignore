@@ -16,7 +16,7 @@ output/lancedb
 # Random
 .DS_Store
 *.log*
-.venv
+.venv*
 venv/
 .conda
 .tmp

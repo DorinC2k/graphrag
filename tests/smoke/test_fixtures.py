@@ -6,6 +6,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
@@ -29,6 +30,28 @@ gh_pages = os.environ.get("GH_PAGES") is not None
 WELL_KNOWN_AZURITE_CONNECTION_STRING = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1"
 
 KNOWN_WARNINGS = [NO_COMMUNITY_RECORDS_WARNING]
+
+# Environment variables used in the smoke tests.
+env_vars = {
+    "BLOB_STORAGE_CONNECTION_STRING": os.getenv(
+        "GRAPHRAG_CACHE_CONNECTION_STRING", WELL_KNOWN_AZURITE_CONNECTION_STRING
+    ),
+    "LOCAL_BLOB_STORAGE_CONNECTION_STRING": WELL_KNOWN_AZURITE_CONNECTION_STRING,
+    "GRAPHRAG_CHUNK_SIZE": "1200",
+    "GRAPHRAG_CHUNK_OVERLAP": "0",
+    "GRAPHRAG_LLM_TYPE": "openai_chat",
+    "GRAPHRAG_EMBEDDING_TYPE": "openai_embedding",
+    "GRAPHRAG_API_KEY": "test-key",
+    "GRAPHRAG_API_BASE": "https://example.com",
+    "GRAPHRAG_API_VERSION": "v1",
+    "GRAPHRAG_LLM_DEPLOYMENT_NAME": "test-llm",
+    "GRAPHRAG_LLM_MODEL": "gpt-4",
+    "GRAPHRAG_LLM_TPM": "1000",
+    "GRAPHRAG_LLM_RPM": "1000",
+    "GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME": "test-embed",
+    "GRAPHRAG_EMBEDDING_MODEL": "text-embedding-ada-002",
+}
+env_vars = {k: v for k, v in env_vars.items() if v is not None}
 
 
 def _load_fixtures():
@@ -130,9 +153,9 @@ class TestIndexer:
         input_file_type: str,
     ):
         command = [
-            "poetry",
-            "run",
-            "poe",
+            sys.executable,
+            "-m",
+            "graphrag",
             "index",
             "--verbose" if debug else None,
             "--root",
@@ -222,21 +245,7 @@ class TestIndexer:
         return subprocess.run(command, capture_output=True, text=True)
 
     @cleanup(skip=debug)
-    @mock.patch.dict(
-        os.environ,
-        {
-            **os.environ,
-            "BLOB_STORAGE_CONNECTION_STRING": os.getenv(
-                "GRAPHRAG_CACHE_CONNECTION_STRING", WELL_KNOWN_AZURITE_CONNECTION_STRING
-            ),
-            "LOCAL_BLOB_STORAGE_CONNECTION_STRING": WELL_KNOWN_AZURITE_CONNECTION_STRING,
-            "GRAPHRAG_CHUNK_SIZE": "1200",
-            "GRAPHRAG_CHUNK_OVERLAP": "0",
-            "AZURE_AI_SEARCH_URL_ENDPOINT": os.getenv("AZURE_AI_SEARCH_URL_ENDPOINT"),
-            "AZURE_AI_SEARCH_API_KEY": os.getenv("AZURE_AI_SEARCH_API_KEY"),
-        },
-        clear=True,
-    )
+    @mock.patch.dict(os.environ, env_vars, clear=True)
     @pytest.mark.timeout(800)
     def test_fixture(
         self,
