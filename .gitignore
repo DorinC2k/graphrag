@@ -54,6 +54,9 @@ docsite/
 # PyCharm
 .idea/
 
+# Idea
+graphrag.iml
+
 # python venvs
 *.venv*
 # Jupyter notebook
