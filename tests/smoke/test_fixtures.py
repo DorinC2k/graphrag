@@ -22,7 +22,9 @@ from graphrag.storage.blob_pipeline_storage import BlobPipelineStorage
 
 log = logging.getLogger(__name__)
 
-debug = os.environ.get("DEBUG") is not None
+#debug = os.environ.get("DEBUG") is not None
+debug = True
+
 gh_pages = os.environ.get("GH_PAGES") is not None
 
 WELL_KNOWN_AZURITE_CONNECTION_STRING = (
@@ -61,6 +63,7 @@ env_vars = {
     "NLTK_DATA": os.path.join(safe_home, "nltk_data"),
     "KMP_DUPLICATE_LIB_OK": "True",
     "KMP_INIT_AT_FORK": "FALSE",
+    "DEBUG": "True"
 }
 
 # Clean out any accidental None values
