@@ -8,7 +8,7 @@ models:
     model: gpt-4o
     model_supports_json: true
   default_embedding_model:
-    api_key: ${GRAPHRAG_API_KEY}
+    api_key: ${HUGGINGFACE_API_TOKEN}
     type: huggingface_embedding
     model: sentence-transformers/all-MiniLM-L6-v2
     encoding_model: cl100k_base
