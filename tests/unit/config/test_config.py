@@ -13,6 +13,7 @@ from graphrag.config.create_graphrag_config import create_graphrag_config
 from graphrag.config.enums import AuthType, ModelType
 from graphrag.config.load_config import load_config
 from tests.unit.config.utils import (
+    DEFAULT_CHAT_MODEL_CONFIG,
     DEFAULT_EMBEDDING_MODEL_CONFIG,
     DEFAULT_MODEL_CONFIG,
     FAKE_API_KEY,
@@ -181,3 +182,29 @@ def test_load_config_missing_env_vars() -> None:
     root_dir = (cwd / "fixtures" / "minimal_config_missing_env_var").resolve()
     with pytest.raises(KeyError):
         load_config(root_dir=root_dir)
+
+
+def test_huggingface_embedding_without_api_key() -> None:
+    model_config = {
+        defs.DEFAULT_CHAT_MODEL_ID: DEFAULT_CHAT_MODEL_CONFIG,
+        defs.DEFAULT_EMBEDDING_MODEL_ID: {
+            "type": ModelType.HuggingFaceEmbedding,
+            "model": "sentence-transformers/all-MiniLM-L6-v2",
+        },
+    }
+
+    create_graphrag_config({"models": model_config})
+
+
+def test_huggingface_embedding_disallows_azure_managed_identity() -> None:
+    model_config = {
+        defs.DEFAULT_CHAT_MODEL_ID: DEFAULT_CHAT_MODEL_CONFIG,
+        defs.DEFAULT_EMBEDDING_MODEL_ID: {
+            "type": ModelType.HuggingFaceEmbedding,
+            "auth_type": AuthType.AzureManagedIdentity,
+            "model": "all-MiniLM-L6-v2",
+        },
+    }
+
+    with pytest.raises(ValidationError):
+        create_graphrag_config({"models": model_config})

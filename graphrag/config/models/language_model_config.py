@@ -43,8 +43,16 @@ class LanguageModelConfig(BaseModel):
         ApiKeyMissingError
             If the API key is missing and is required.
         """
-        if self.auth_type == AuthType.APIKey and (
-            self.api_key is None or self.api_key.strip() == ""
+        if (
+            self.auth_type == AuthType.APIKey
+            and self.type
+            in (
+                ModelType.OpenAIChat,
+                ModelType.OpenAIEmbedding,
+                ModelType.AzureOpenAIChat,
+                ModelType.AzureOpenAIEmbedding,
+            )
+            and (self.api_key is None or self.api_key.strip() == "")
         ):
             raise ApiKeyMissingError(
                 self.type,
@@ -74,7 +82,12 @@ class LanguageModelConfig(BaseModel):
             If the Azure authentication type conflicts with the model being used.
         """
         if self.auth_type == AuthType.AzureManagedIdentity and (
-            self.type == ModelType.OpenAIChat or self.type == ModelType.OpenAIEmbedding
+            self.type
+            in (
+                ModelType.OpenAIChat,
+                ModelType.OpenAIEmbedding,
+                ModelType.HuggingFaceEmbedding,
+            )
         ):
             msg = f"auth_type of azure_managed_identity is not supported for model type {self.type}. Please rerun `graphrag init` and set the auth_type to api_key."
             raise ConflictingSettingsError(msg)
@@ -108,7 +121,9 @@ class LanguageModelConfig(BaseModel):
         KeyError
             If the model name is not recognized.
         """
-        if self.encoding_model.strip() == "":
+        if self.encoding_model.strip() == "" and self.type not in (
+            ModelType.HuggingFaceEmbedding,
+        ):
             self.encoding_model = tiktoken.encoding_name_for_model(self.model)
 
     api_base: str | None = Field(
@@ -323,6 +338,10 @@ class LanguageModelConfig(BaseModel):
         self._validate_tokens_per_minute()
         self._validate_requests_per_minute()
         self._validate_max_retries()
-        self._validate_azure_settings()
+        if self.type in (
+            ModelType.AzureOpenAIChat,
+            ModelType.AzureOpenAIEmbedding,
+        ):
+            self._validate_azure_settings()
         self._validate_encoding_model()
         return self
