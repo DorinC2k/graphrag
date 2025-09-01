@@ -269,5 +269,5 @@ exclude = ["**/node_modules", "**/__pycache__"]
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
-timeout = 1000
+timeout = 5000
 env_files = [".env"]

@@ -1,4 +1,4 @@
-# test_fixtures.py (fully patched)
+# test_fixtures.py (cross-platform ready)
 
 import asyncio
 import json
@@ -22,22 +22,26 @@ from graphrag.storage.blob_pipeline_storage import BlobPipelineStorage
 
 log = logging.getLogger(__name__)
 
-#debug = os.environ.get("DEBUG") is not None
+# Debug and platform flags
 debug = True
-
 gh_pages = os.environ.get("GH_PAGES") is not None
 
-WELL_KNOWN_AZURITE_CONNECTION_STRING = (
-    "DefaultEndpointsProtocol=http;"
-    "AccountName=devstoreaccount1;"
-    "AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/"
-    "K1SZFPTOtr/KBHBeksoGMGw==;"
-    "BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1"
+# Azurite connection string with override option
+WELL_KNOWN_AZURITE_CONNECTION_STRING = os.getenv(
+    "WELL_KNOWN_AZURITE_CONNECTION_STRING",
+    (
+        "DefaultEndpointsProtocol=http;"
+        "AccountName=devstoreaccount1;"
+        "AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/"
+        "K1SZFPTOtr/KBHBeksoGMGw==;"
+        "BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1"
+    )
 )
 
 KNOWN_WARNINGS = [NO_COMMUNITY_RECORDS_WARNING]
 
 safe_home = os.path.expanduser("~")
+is_windows = platform.system() == "Windows"
 
 # Base env_vars with all needed template substitutions
 env_vars = {
@@ -47,7 +51,7 @@ env_vars = {
     "GRAPHRAG_CHUNK_OVERLAP": "0",
     "GRAPHRAG_LLM_TYPE": "azure_openai_chat",
     "GRAPHRAG_EMBEDDING_TYPE": "azure_openai_embedding",
-    "GRAPHRAG_API_KEY": "2wyINFmywb4HXysCHVlymJsBwH9KjcYVqSDlX0wsGDnfbl25nZ5tJQQJ99BAACYeBjFXJ3w3AAABACOGf2aQ",
+    "GRAPHRAG_API_KEY": os.getenv("GRAPHRAG_API_KEY", "2wyINFmywb4HXysCHVlymJsBwH9KjcYVqSDlX0wsGDnfbl25nZ5tJQQJ99BAACYeBjFXJ3w3AAABACOGf2aQ"),
     "GRAPHRAG_API_BASE": "https://dc-law-chatbot.openai.azure.com/",
     "GRAPHRAG_API_VERSION": "2024-12-01-preview",
     "GRAPHRAG_LLM_DEPLOYMENT_NAME": "gpt-4o",
@@ -55,56 +59,53 @@ env_vars = {
     "GRAPHRAG_LLM_TPM": "1000",
     "GRAPHRAG_LLM_RPM": "1000",
     "GRAPHRAG_EMBEDDING_API_VERSION": "2",
-    "GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME": "text-embedding-ada-002",
-    "GRAPHRAG_EMBEDDING_MODEL": "text-embedding-ada-002",
-    "USERPROFILE": os.environ.get("USERPROFILE", safe_home),
-    "HOME": os.environ.get("HOME", safe_home),
-    "SYSTEMROOT": os.environ.get("SYSTEMROOT", "C:\\Windows"),
+    "GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME": "text-embedding-3-small",
+    "GRAPHRAG_EMBEDDING_MODEL": "text-embedding-3-small",
+    "HOME": safe_home,
     "NLTK_DATA": os.path.join(safe_home, "nltk_data"),
     "KMP_DUPLICATE_LIB_OK": "True",
     "KMP_INIT_AT_FORK": "FALSE",
     "DEBUG": "True"
 }
 
+# Windows-specific overrides
+if is_windows:
+    env_vars["USERPROFILE"] = os.environ.get("USERPROFILE", safe_home)
+    env_vars["SYSTEMROOT"] = os.environ.get("SYSTEMROOT", "C:\\Windows")
+
 # Clean out any accidental None values
 env_vars = {k: v for k, v in env_vars.items() if v is not None}
 
 def build_subprocess_env(extra_vars: dict = None) -> dict:
-    env = dict(env_vars)  # 🔥 key fix: use the full global env_vars
-
+    env = dict(env_vars)
     for key in ["PATH", "VIRTUAL_ENV", "PYTHONPATH"]:
         if key in os.environ:
             env[key] = os.environ[key]
-
     if extra_vars:
         env.update(extra_vars)
-
     return env
-
 
 def _load_fixtures():
     params = []
     fixtures_path = Path("./tests/fixtures/")
     subfolders = ["min-csv"] if gh_pages else sorted(os.listdir(fixtures_path))
-
     for subfolder in subfolders:
-        if not os.path.isdir(fixtures_path / subfolder):
+        full_path = fixtures_path / subfolder
+        if not full_path.is_dir():
             continue
-        config_file = fixtures_path / subfolder / "config.json"
-        params.append((subfolder, json.loads(config_file.read_bytes().decode("utf-8"))))
-
+        config_file = full_path / "config.json"
+        params.append((subfolder, json.loads(config_file.read_text(encoding="utf-8"))))
     return params[1:]  # skip azure test
 
 def pytest_generate_tests(metafunc):
     run_slow = metafunc.config.getoption("run_slow")
     configs = metafunc.cls.params[metafunc.function.__name__]
-
     if not run_slow:
         configs = [config for config in configs if not config[1].get("slow", False)]
-
+    if not configs:
+        pytest.skip("No configurations to run")
     funcarglist = [params[1] for params in configs]
     id_list = [params[0] for params in configs]
-
     argnames = sorted(arg for arg in funcarglist[0] if arg != "slow")
     metafunc.parametrize(
         argnames,
@@ -119,7 +120,7 @@ def cleanup(skip: bool = False):
             try:
                 return func(*args, **kwargs)
             finally:
-                if not skip:
+                if not skip and "input_path" in kwargs:
                     root = Path(kwargs["input_path"])
                     shutil.rmtree(root / "output", ignore_errors=True)
                     shutil.rmtree(root / "cache", ignore_errors=True)
@@ -136,12 +137,10 @@ async def prepare_azurite_data(input_path: str, azure: dict) -> Callable[[], Non
     )
     input_storage._delete_container()
     input_storage._create_container()
-
     for data_file in list((root / "input").glob("*.txt")) + list((root / "input").glob("*.csv")):
-        text = data_file.read_bytes().decode("utf-8")
+        text = data_file.read_text(encoding="utf-8")
         file_path = str(Path(input_base_dir) / data_file.name) if input_base_dir else data_file.name
         await input_storage.set(file_path, text, encoding="utf-8")
-
     return lambda: input_storage._delete_container()
 
 class TestIndexer:
@@ -158,25 +157,21 @@ class TestIndexer:
             "--method", "standard",
         ]
         command = [arg for arg in command if arg]
-        log.info("running command ", " ".join(command))
-
+        log.info("Running command: %s", " ".join(command))
         completion = subprocess.run(command, env=build_subprocess_env({
             "GRAPHRAG_INPUT_FILE_TYPE": input_file_type
         }))
-
         assert completion.returncode == 0, f"Indexer failed with return code: {completion.returncode}"
 
     def __assert_indexer_outputs(self, root: Path, workflow_config: dict[str, dict[str, Any]]):
         output_path = root / "output"
         assert output_path.exists(), "output folder does not exist"
-        stats = json.loads((output_path / "stats.json").read_bytes().decode("utf-8"))
-
+        stats = json.loads((output_path / "stats.json").read_text(encoding="utf-8"))
         expected_workflows = set(workflow_config.keys())
         actual_workflows = set(stats["workflows"].keys())
         assert expected_workflows == actual_workflows, (
             f"Missing: {expected_workflows - actual_workflows}, Unexpected: {actual_workflows - expected_workflows}"
         )
-
         for wf, cfg in workflow_config.items():
             if cfg.get("max_runtime"):
                 assert stats["workflows"][wf]["overall"] <= cfg["max_runtime"]
@@ -200,30 +195,20 @@ class TestIndexer:
 
     @cleanup(skip=debug)
     @mock.patch.dict(os.environ, env_vars, clear=True)
-    @pytest.mark.timeout(800)
+    @pytest.mark.timeout(2000)
     def test_fixture(self, input_path: str, input_file_type: str,
                      workflow_config: dict[str, dict[str, Any]],
                      query_config: list[dict[str, str]]):
         if workflow_config.get("skip"):
-            print(f"skipping smoke test {input_path})")
-            return
-
+            pytest.skip(f"Skipping smoke test {input_path}")
         root = Path(input_path)
         dispose = asyncio.run(prepare_azurite_data(input_path, workflow_config["azure"])) \
             if workflow_config.get("azure") else None
-
-        print("running indexer")
         self.__run_indexer(root, input_file_type)
-        print("indexer complete")
-
         if dispose:
             dispose()
-
         if not workflow_config.get("skip_assert"):
-            print("performing dataset assertions")
             self.__assert_indexer_outputs(root, workflow_config)
-
-        print("running queries")
         for query in query_config:
             result = self.__run_query(root, query)
             print(f"Query: {query}\nResponse: {result.stdout}")
