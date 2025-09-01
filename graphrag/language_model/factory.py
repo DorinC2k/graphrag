@@ -14,6 +14,9 @@ from graphrag.language_model.providers.fnllm.models import (
     OpenAIChatFNLLM,
     OpenAIEmbeddingFNLLM,
 )
+from graphrag.language_model.providers.huggingface.models import (
+    HuggingFaceEmbeddingModel,
+)
 
 
 class ModelFactory:
@@ -111,4 +114,8 @@ ModelFactory.register_embedding(
 )
 ModelFactory.register_embedding(
     ModelType.OpenAIEmbedding, lambda **kwargs: OpenAIEmbeddingFNLLM(**kwargs)
+)
+ModelFactory.register_embedding(
+    ModelType.HuggingFaceEmbedding,
+    lambda **kwargs: HuggingFaceEmbeddingModel(**kwargs),
 )
