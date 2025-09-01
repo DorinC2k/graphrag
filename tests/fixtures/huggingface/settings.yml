@@ -1,0 +1,14 @@
+models:
+  default_chat_model:
+    api_key: ${GRAPHRAG_API_KEY}
+    type: azure_openai_chat
+    api_base: https://example.openai.azure.com/
+    api_version: '2023-05-15'
+    deployment_name: gpt-4o
+    model: gpt-4o
+    model_supports_json: true
+  default_embedding_model:
+    api_key: ${GRAPHRAG_API_KEY}
+    type: huggingface_embedding
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoding_model: cl100k_base
