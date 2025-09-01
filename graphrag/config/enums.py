@@ -80,6 +80,7 @@ class ModelType(str, Enum):
     # Embeddings
     OpenAIEmbedding = "openai_embedding"
     AzureOpenAIEmbedding = "azure_openai_embedding"
+    HuggingFaceEmbedding = "huggingface_embedding"
 
     # Chat Completion
     OpenAIChat = "openai_chat"

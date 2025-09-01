@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from graphrag.config.defaults import graphrag_config_defaults
 from graphrag.config.models.language_model_config import LanguageModelConfig
+from graphrag.config.enums import ModelType
 
 
 class TextEmbeddingConfig(BaseModel):
@@ -43,8 +44,14 @@ class TextEmbeddingConfig(BaseModel):
             TextEmbedStrategyType,
         )
 
+        strategy_type = (
+            TextEmbedStrategyType.huggingface
+            if model_config.type == ModelType.HuggingFaceEmbedding
+            else TextEmbedStrategyType.openai
+        )
+
         return self.strategy or {
-            "type": TextEmbedStrategyType.openai,
+            "type": strategy_type,
             "llm": model_config.model_dump(),
             "num_threads": model_config.concurrent_requests,
             "batch_size": self.batch_size,
