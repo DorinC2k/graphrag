@@ -2,7 +2,7 @@
 
 As of version 1.3, GraphRAG no longer supports a full complement of pre-built environment variables. Instead, we support variable replacement within the [settings.yml file](yaml.md) so you can specify any environment variables you like.
 
-The only standard environment variable we expect, and include in the default settings.yml, is `GRAPHRAG_API_KEY`. If you are already using a number of the previous GRAPHRAG_* environment variables, you can insert them with template syntax into settings.yml and they will be adopted.
+The only standard environment variable we expect, and include in the default settings.yml, is `GRAPHRAG_API_KEY` for Azure OpenAI models such as `gpt-4o`. If you are using a Hugging Face embedding model, supply a `HUGGINGFACE_API_TOKEN` instead. If you are already using a number of the previous GRAPHRAG_* environment variables, you can insert them with template syntax into settings.yml and they will be adopted.
 
 > **The environment variables below are documented as an aid for migration, but they WILL NOT be read unless you use template syntax in your settings.yml.**
 
@@ -74,6 +74,7 @@ These settings control the text embedding model used by the pipeline. Any settin
 
 | Parameter                                               | Required ?               | Description                                                                                                                | Type    | Default                  |
 | ------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
+| `HUGGINGFACE_API_TOKEN`                                 | **For HuggingFace**      | The API token to use when calling Hugging Face embeddings.                                   | `str`   | `None`                   |
 | `GRAPHRAG_EMBEDDING_TYPE`                               | **For AOAI**             | The embedding client to use. Either `openai_embedding` or `azure_openai_embedding`                                         | `str`   | `openai_embedding`       |
 | `GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME`                    | **For AOAI**             | The AOAI deployment name.                                                                                                  | `str`   | `None`                   |
 | `GRAPHRAG_EMBEDDING_API_KEY`                            | Yes (uses fallback)      | The API key to use for the embedding client. If not defined when using AOAI, managed identity will be used.                | `str`   | `None`                   |
