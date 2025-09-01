@@ -53,6 +53,27 @@ global_search:
   reduce_prompt: "prompts/global_search_reduce_system_prompt.txt"
   knowledge_prompt: "prompts/global_search_knowledge_system_prompt.txt"
 ```
+To use a Hugging Face embedding model alongside an Azure OpenAI chat model, define both in your configuration. Reference the embedding model via `embed_text.model_id` while keeping the Azure OpenAI model for `prompt_tune` and query workflows:
+
+```yaml
+models:
+  azure_chat_model:
+    api_key: ${GRAPHRAG_API_KEY}
+    type: openai_chat
+    model: gpt-4o
+  hf_embed_model:
+    api_key: ${HUGGINGFACE_API_TOKEN}
+    type: huggingface_embedding
+    model: sentence-transformers/all-MiniLM-L6-v2
+    # device: cuda  # optional
+embed_text:
+  model_id: hf_embed_model
+prompt_tune:
+  chat_model_id: azure_chat_model
+query:
+  chat_model_id: azure_chat_model
+```
+
 
 Another option would be to avoid using a language model at all for the graph extraction, instead using the `fast` [indexing method](../index/methods.md) that uses NLP for portions of the indexing phase in lieu of LLM APIs.
 
