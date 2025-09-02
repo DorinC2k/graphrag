@@ -14,8 +14,8 @@ models:
     async_mode: threaded
   default_embedding_model:
     type: huggingface_embedding
-    api_key: fake-hf-key
-    model: sentence-transformers/all-MiniLM-L6-v2
+    api_key: &hf_api_key fake-hf-key
+    model: &hf_model sentence-transformers/all-MiniLM-L6-v2
     encoding_model: cl100k_base
     tokens_per_minute: null
     requests_per_minute: null
@@ -47,4 +47,6 @@ drift_search:
 
 embed_text:
   strategy:
-    type: "mock"
+    type: "huggingface"
+    model: *hf_model
+    api_key: *hf_api_key
