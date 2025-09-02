@@ -50,7 +50,6 @@ env_vars = {
     "GRAPHRAG_CHUNK_SIZE": "1200",
     "GRAPHRAG_CHUNK_OVERLAP": "0",
     "GRAPHRAG_LLM_TYPE": "azure_openai_chat",
-    "GRAPHRAG_EMBEDDING_TYPE": "azure_openai_embedding",
     "GRAPHRAG_API_KEY": os.getenv("GRAPHRAG_API_KEY", "2wyINFmywb4HXysCHVlymJsBwH9KjcYVqSDlX0wsGDnfbl25nZ5tJQQJ99BAACYeBjFXJ3w3AAABACOGf2aQ"),
     "GRAPHRAG_API_BASE": "https://dc-law-chatbot.openai.azure.com/",
     "GRAPHRAG_API_VERSION": "2024-12-01-preview",
@@ -76,7 +75,7 @@ if is_windows:
 # Clean out any accidental None values
 env_vars = {k: v for k, v in env_vars.items() if v is not None}
 
-def build_subprocess_env(extra_vars: dict = None) -> dict:
+def build_subprocess_env(extra_vars: dict | None = None) -> dict:
     env = dict(env_vars)
     for key in ["PATH", "VIRTUAL_ENV", "PYTHONPATH"]:
         if key in os.environ:
@@ -148,7 +147,7 @@ class TestIndexer:
         "test_fixture": _load_fixtures()
     }
 
-    def __run_indexer(self, root: Path, input_file_type: str):
+    def __run_indexer(self, root: Path, input_file_type: str, embedding_type: str):
         command = [
             sys.executable, "-m", "graphrag", "index",
             "--verbose" if debug else None,
@@ -159,7 +158,8 @@ class TestIndexer:
         command = [arg for arg in command if arg]
         log.info("Running command: %s", " ".join(command))
         completion = subprocess.run(command, env=build_subprocess_env({
-            "GRAPHRAG_INPUT_FILE_TYPE": input_file_type
+            "GRAPHRAG_INPUT_FILE_TYPE": input_file_type,
+            "GRAPHRAG_EMBEDDING_TYPE": embedding_type,
         }))
         assert completion.returncode == 0, f"Indexer failed with return code: {completion.returncode}"
 
@@ -183,7 +183,7 @@ class TestIndexer:
                     nan_df = df.loc[:, ~df.columns.isin(cfg.get("nan_allowed_columns", []))]
                     assert not nan_df.isna().any().any()
 
-    def __run_query(self, root: Path, query_config: dict[str, str]):
+    def __run_query(self, root: Path, query_config: dict[str, str], extra_vars: dict | None = None):
         command = [
             "poetry", "run", "poe", "query",
             "--root", root.resolve().as_posix(),
@@ -191,7 +191,7 @@ class TestIndexer:
             "--community-level", str(query_config.get("community_level", 2)),
             "--query", query_config["query"],
         ]
-        return subprocess.run(command, capture_output=True, text=True)
+        return subprocess.run(command, env=build_subprocess_env(extra_vars), capture_output=True, text=True)
 
     @cleanup(skip=debug)
     @mock.patch.dict(os.environ, env_vars, clear=True)
@@ -202,16 +202,17 @@ class TestIndexer:
         if workflow_config.get("skip"):
             pytest.skip(f"Skipping smoke test {input_path}")
         root = Path(input_path)
-        if root.name == "huggingface":
-            pytest.importorskip("sentence_transformers")
+        embedding_type = (
+            "huggingface_embedding" if "huggingface" in input_path else "azure_openai_embedding"
+        )
         dispose = asyncio.run(prepare_azurite_data(input_path, workflow_config["azure"])) \
             if workflow_config.get("azure") else None
-        self.__run_indexer(root, input_file_type)
+        self.__run_indexer(root, input_file_type, embedding_type)
         if dispose:
             dispose()
         if not workflow_config.get("skip_assert"):
             self.__assert_indexer_outputs(root, workflow_config)
         for query in query_config:
-            result = self.__run_query(root, query)
+            result = self.__run_query(root, query, {"GRAPHRAG_EMBEDDING_TYPE": embedding_type})
             print(f"Query: {query}\nResponse: {result.stdout}")
             assert result.returncode == 0 and result.stdout
