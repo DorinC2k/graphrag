@@ -202,6 +202,8 @@ class TestIndexer:
         if workflow_config.get("skip"):
             pytest.skip(f"Skipping smoke test {input_path}")
         root = Path(input_path)
+        if root.name == "huggingface":
+            pytest.importorskip("sentence_transformers")
         dispose = asyncio.run(prepare_azurite_data(input_path, workflow_config["azure"])) \
             if workflow_config.get("azure") else None
         self.__run_indexer(root, input_file_type)
