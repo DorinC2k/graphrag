@@ -14,7 +14,7 @@ models:
     async_mode: threaded
   default_embedding_model:
     type: huggingface_embedding
-    api_key: &hf_api_key fake-hf-key
+    api_key: &hf_api_key null
     model: &hf_model sentence-transformers/all-MiniLM-L6-v2
     encoding_model: cl100k_base
     tokens_per_minute: null
