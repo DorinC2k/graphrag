@@ -65,6 +65,7 @@ models:
     api_key: ${HUGGINGFACE_API_TOKEN}
     type: huggingface_embedding
     model: sentence-transformers/all-MiniLM-L6-v2
+    api_base: https://your-endpoint.aws.endpoints.huggingface.cloud  # optional
     # device: cuda  # optional
 embed_text:
   model_id: hf_embed_model
@@ -73,6 +74,10 @@ prompt_tune:
 query:
   chat_model_id: azure_chat_model
 ```
+
+Provide the `api_base` if your embedding model is served through a Hugging Face
+Inference Endpoint. The token supplied via `api_key` will be sent as a Bearer
+token when calling the endpoint.
 
 
 Another option would be to avoid using a language model at all for the graph extraction, instead using the `fast` [indexing method](../index/methods.md) that uses NLP for portions of the indexing phase in lieu of LLM APIs.
