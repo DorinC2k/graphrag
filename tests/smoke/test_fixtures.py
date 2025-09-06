@@ -60,6 +60,8 @@ env_vars = {
     "GRAPHRAG_EMBEDDING_API_VERSION": "2",
     "GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME": "text-embedding-3-small",
     "GRAPHRAG_EMBEDDING_MODEL": "text-embedding-3-small",
+    "HUGGINGFACE_API_TOKEN": os.getenv("HUGGINGFACE_API_TOKEN", "test_token"),
+    "HUGGINGFACE_API_BASE": os.getenv("HUGGINGFACE_API_BASE", ""),
     "HOME": safe_home,
     "NLTK_DATA": os.path.join(safe_home, "nltk_data"),
     "KMP_DUPLICATE_LIB_OK": "True",
