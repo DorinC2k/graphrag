@@ -57,8 +57,10 @@ async def run(
             response.raise_for_status()
             data = response.json()
         except requests.RequestException as e:  # pragma: no cover - network failures
-            callbacks.error("HuggingFace embedding request failed", e)
-            msg = "HuggingFace embedding request failed"
+            status = getattr(e.response, "status_code", "unknown")
+            text = getattr(e.response, "text", "")
+            msg = f"HuggingFace embedding request failed: {status} {text}"
+            callbacks.error(msg, e)
             raise RuntimeError(msg) from e
 
         ticker = progress_ticker(callbacks.progress, len(input))
