@@ -44,6 +44,8 @@ async def test_remote_hf_embeddings_send_auth_and_parse():
     mock_post.assert_called_once()
     headers = mock_post.call_args.kwargs["headers"]
     assert headers["Authorization"] == "Bearer tok"
+    assert headers["Accept"] == "application/json"
+    assert headers["Content-Type"] == "application/json"
     assert result.embeddings == [[0.1, 0.2]]
 
 
