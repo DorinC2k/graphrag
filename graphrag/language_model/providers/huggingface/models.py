@@ -56,9 +56,15 @@ class HuggingFaceEmbeddingModel:
     def embed_batch(self, text_list: list[str], **kwargs: Any) -> list[list[float]]:
         if self.api_base:
             try:
+                headers = {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                }
+                if self.api_key:
+                    headers["Authorization"] = f"Bearer {self.api_key}"
                 response = requests.post(
                     self.api_base,
-                    headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
+                    headers=headers,
                     json={"inputs": text_list},
                     timeout=30,
                 )

@@ -46,7 +46,11 @@ async def run(
             response = await asyncio.to_thread(
                 requests.post,
                 api_base,
-                headers={"Authorization": f"Bearer {api_key}"},
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
                 json={"inputs": input},
                 timeout=30,
             )
