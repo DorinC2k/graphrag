@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-"""Hugging Face embedding model provider."""
+"""Hugging Face embedding model provider.
+
+Supports the ``HUGGING_FACE_TOKEN_READ_KEY`` and ``HUGGINGFACE_API_TOKEN``
+environment variables for authentication.
+"""
 
 from typing import TYPE_CHECKING, Any
 import asyncio
+import os
 import requests
 
 try:
@@ -32,7 +37,12 @@ class HuggingFaceEmbeddingModel:
     ) -> None:
         self.config = config
         self.api_base = config.api_base
-        self.api_key = config.api_key
+        # API key is sourced from config or supported environment variables
+        self.api_key = (
+            config.api_key
+            or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
+            or os.getenv("HUGGINGFACE_API_TOKEN")
+        )
 
         if self.api_base:
             # Remote endpoint, no local model initialization
@@ -45,9 +55,11 @@ class HuggingFaceEmbeddingModel:
             )
 
         model_name = config.model or "sentence-transformers/all-MiniLM-L6-v2"
-        self.model = SentenceTransformer(model_name, use_auth_token=config.api_key)
+        self.model = SentenceTransformer(model_name, use_auth_token=self.api_key)
 
-    async def aembed_batch(self, text_list: list[str], **kwargs: Any) -> list[list[float]]:
+    async def aembed_batch(
+        self, text_list: list[str], **kwargs: Any
+    ) -> list[list[float]]:
         return await asyncio.to_thread(self.embed_batch, text_list, **kwargs)
 
     async def aembed(self, text: str, **kwargs: Any) -> list[float]:
@@ -70,7 +82,9 @@ class HuggingFaceEmbeddingModel:
                 )
                 response.raise_for_status()
                 data = response.json()
-            except requests.RequestException as e:  # pragma: no cover - network failures
+            except (
+                requests.RequestException
+            ) as e:  # pragma: no cover - network failures
                 msg = "HuggingFace embedding request failed"
                 raise RuntimeError(msg) from e
 
@@ -83,4 +97,3 @@ class HuggingFaceEmbeddingModel:
 
     def embed(self, text: str, **kwargs: Any) -> list[float]:
         return self.embed_batch([text], **kwargs)[0]
-

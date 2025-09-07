@@ -1,7 +1,11 @@
 # Copyright (c) 2024 Microsoft Corporation.
 # Licensed under the MIT License
 
-"""Text embedding strategy using HuggingFace sentence-transformers."""
+"""Text embedding strategy using HuggingFace sentence-transformers.
+
+Supports the ``HUGGING_FACE_TOKEN_READ_KEY`` and ``HUGGINGFACE_API_TOKEN``
+environment variables for authentication.
+"""
 
 from __future__ import annotations
 
@@ -36,7 +40,12 @@ async def run(
     model_info = args.get("llm", {})
     model_name = model_info.get("model")
     api_base = model_info.get("api_base")
-    api_key = model_info.get("api_key") or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
+    # API key is sourced from model info or supported environment variables
+    api_key = (
+        model_info.get("api_key")
+        or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
+        or os.getenv("HUGGINGFACE_API_TOKEN")
+    )
 
     if api_base:
         if not api_key:
