@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 import asyncio
+import requests
 
 try:
     from sentence_transformers import SentenceTransformer
@@ -17,9 +18,9 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 
 
 class HuggingFaceEmbeddingModel:
-    """Embedding model backed by a Hugging Face `SentenceTransformer`."""
+    """Embedding model backed by a Hugging Face `SentenceTransformer` or remote endpoint."""
 
-    model: SentenceTransformer
+    model: SentenceTransformer | None
 
     def __init__(
         self,
@@ -29,28 +30,51 @@ class HuggingFaceEmbeddingModel:
         callbacks: WorkflowCallbacks | None = None,
         cache: PipelineCache | None = None,
     ) -> None:
+        self.config = config
+        self.api_base = config.api_base
+        self.api_key = config.api_key
+
+        if self.api_base:
+            # Remote endpoint, no local model initialization
+            self.model = None
+            return
+
         if SentenceTransformer is None:  # pragma: no cover - dependency is optional
             raise ImportError(
-                "sentence-transformers is required to use HuggingFace embeddings"
+                "sentence-transformers is required to use HuggingFace embeddings",
             )
+
         model_name = config.model or "sentence-transformers/all-MiniLM-L6-v2"
         self.model = SentenceTransformer(model_name, use_auth_token=config.api_key)
-        self.config = config
 
     async def aembed_batch(self, text_list: list[str], **kwargs: Any) -> list[list[float]]:
-        loop = asyncio.get_running_loop()
-        embeddings = await loop.run_in_executor(
-            None,
-            lambda: self.model.encode(text_list, convert_to_numpy=True, **kwargs),
-        )
-        return embeddings.tolist()
+        return await asyncio.to_thread(self.embed_batch, text_list, **kwargs)
 
     async def aembed(self, text: str, **kwargs: Any) -> list[float]:
         return (await self.aembed_batch([text], **kwargs))[0]
 
     def embed_batch(self, text_list: list[str], **kwargs: Any) -> list[list[float]]:
+        if self.api_base:
+            try:
+                response = requests.post(
+                    self.api_base,
+                    headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
+                    json={"inputs": text_list},
+                    timeout=30,
+                )
+                response.raise_for_status()
+                data = response.json()
+            except requests.RequestException as e:  # pragma: no cover - network failures
+                msg = "HuggingFace embedding request failed"
+                raise RuntimeError(msg) from e
+
+            if isinstance(data, dict):
+                return data.get("embeddings")
+            return data
+
         embeddings = self.model.encode(text_list, convert_to_numpy=True, **kwargs)
         return embeddings.tolist()
 
     def embed(self, text: str, **kwargs: Any) -> list[float]:
         return self.embed_batch([text], **kwargs)[0]
+
