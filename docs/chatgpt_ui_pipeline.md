@@ -47,6 +47,7 @@ the downstream scripts can parse the outputs without changes.
      --out /path/to/binders \
      --binder-bytes 9500000
    ```
+   
    Upload each binder to ChatGPT and immediately run the **graph extraction**
    prompt from `extract_graph.py`.
 
