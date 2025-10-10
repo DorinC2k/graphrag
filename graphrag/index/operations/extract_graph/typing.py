@@ -53,6 +53,7 @@ class ExtractEntityStrategyType(str, Enum):
 
     graph_intelligence = "graph_intelligence"
     nltk = "nltk"
+    huggingface_mrebel = "huggingface_mrebel"
 
     def __repr__(self):
         """Get a string representation."""
