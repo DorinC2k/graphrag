@@ -17,6 +17,7 @@ from graphrag.config.enums import AsyncType
 from graphrag.config.models.language_model_config import LanguageModelConfig
 from graphrag.index.operations.extract_covariates.claim_extractor import ClaimExtractor
 from graphrag.index.operations.extract_covariates.typing import (
+    ClaimExtractionStrategyType,
     Covariate,
     CovariateExtractionResult,
 )
@@ -81,14 +82,63 @@ def create_row_from_claim_data(row, covariate_data: Covariate, covariate_type: s
 
 
 async def run_extract_claims(
-    input: str | Iterable[str],
+    input_text: str | Iterable[str],
     entity_types: list[str],
     resolved_entities_map: dict[str, str],
     callbacks: WorkflowCallbacks,
     cache: PipelineCache,
     strategy_config: dict[str, Any],
 ) -> CovariateExtractionResult:
-    """Run the Claim extraction chain."""
+    """Run the claim extraction chain using the configured strategy."""
+
+    strategy_type = strategy_config.get(
+        "type", ClaimExtractionStrategyType.graph_intelligence
+    )
+    strategy = load_claim_extraction_strategy(ClaimExtractionStrategyType(strategy_type))
+
+    normalized_input = (
+        [input_text] if isinstance(input_text, str) else list(input_text)
+    )
+
+    return await strategy(
+        normalized_input,
+        entity_types,
+        resolved_entities_map,
+        callbacks,
+        cache,
+        strategy_config,
+    )
+
+
+def load_claim_extraction_strategy(
+    strategy_type: ClaimExtractionStrategyType,
+):
+    """Load the configured claim extraction strategy."""
+
+    match strategy_type:
+        case ClaimExtractionStrategyType.graph_intelligence:
+            return _run_graph_intelligence_claims
+        case ClaimExtractionStrategyType.huggingface_mrebel:
+            from graphrag.index.operations.extract_covariates.mrebel_strategy import (
+                run_huggingface_mrebel_claims,
+            )
+
+            return run_huggingface_mrebel_claims
+        case _:
+            msg = f"Unknown claim extraction strategy: {strategy_type}"
+            raise ValueError(msg)
+
+
+async def _run_graph_intelligence_claims(
+    input_text: Iterable[str],
+    entity_types: list[str],
+    resolved_entities_map: dict[str, str],
+    callbacks: WorkflowCallbacks,
+    cache: PipelineCache,
+    strategy_config: dict[str, Any],
+) -> CovariateExtractionResult:
+    """Run the legacy graph intelligence claim extraction strategy."""
+
     llm_config = LanguageModelConfig(**strategy_config["llm"])
     llm = ModelManager().get_or_create_chat_model(
         name="extract_claims",
@@ -120,10 +170,8 @@ async def run_extract_claims(
         msg = "claim_description is required for claim extraction"
         raise ValueError(msg)
 
-    input = [input] if isinstance(input, str) else input
-
     results = await extractor({
-        "input_text": input,
+        "input_text": input_text,
         "entity_specs": entity_types,
         "resolved_entities": resolved_entities_map,
         "claim_description": claim_description,

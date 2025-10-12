@@ -224,6 +224,7 @@ Tune the language model-based graph extraction process.
 - `prompt` **str** - The prompt file to use.
 - `max_length` **int** - The maximum number of output tokens per summarization.
 - `max_input_length` **int** - The maximum number of tokens to collect for summarization (this will limit how many descriptions you send to be summarized for a given entity or relationship).
+- `strategy` **dict** - Optional override for the summarization strategy. Set `type: huggingface_mrebel` to use the Babelscape/mrebel-base model instead of a chat LLM.
 
 ### extract_graph_nlp
 
@@ -277,6 +278,7 @@ These are the settings used for Leiden hierarchical clustering of the graph to c
 - `prompt` **str** - The prompt file to use.
 - `description` **str** - Describes the types of claims we want to extract.
 - `max_gleanings` **int** - The maximum number of gleaning cycles to use.
+- `strategy` **dict** - Optional override for the claim extraction strategy. Set `type: huggingface_mrebel` to use the Babelscape/mrebel-base model instead of a chat LLM.
 
 ### community_reports
 
