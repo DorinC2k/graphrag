@@ -1,0 +1,116 @@
+# Example settings.yml for GraphRAG
+# This configuration uses:
+#   * The Hugging Face Babelscape/mrebel-base model for graph extraction.
+#   * A Hugging Face sentence-transformer for text embeddings.
+#   * Standard OpenAI chat models for summarization and query workflows.
+#
+# Update the environment variables in your .env file to include:
+#   GRAPHRAG_API_KEY=<your OpenAI API key>
+#   HUGGINGFACE_API_TOKEN=<token with access to the embedding model>
+#   HUGGINGFACE_API_BASE=<optional, if you are using a hosted inference endpoint>
+#
+# Save this file as settings.yml in the root of your data project and run `graphrag index`.
+
+models:
+  default_chat_model:
+    type: openai_chat
+    auth_type: api_key
+    api_key: ${GRAPHRAG_API_KEY}
+    model: gpt-4o
+    model_supports_json: true
+    concurrent_requests: 32
+    async_mode: threaded
+    retry_strategy: native
+    max_retries: 3
+  default_embedding_model:
+    type: huggingface_embedding
+    api_key: ${HUGGINGFACE_API_TOKEN}
+    model: sentence-transformers/all-MiniLM-L6-v2
+    api_base: ${HUGGINGFACE_API_BASE}
+    concurrent_requests: 8
+    async_mode: threaded
+    retry_strategy: native
+    max_retries: 3
+
+input:
+  storage:
+    type: file
+    base_dir: "input"
+  file_type: text
+  max_files: null
+  max_total_size_mb: null
+
+chunks:
+  size: 1200
+  overlap: 100
+  strategy: tokens
+  encoding_model: cl100k_base
+
+output:
+  type: file
+  base_dir: "output"
+
+cache:
+  type: file
+  base_dir: "cache"
+
+reporting:
+  type: file
+  base_dir: "logs"
+
+vector_store:
+  default_vector_store:
+    type: lancedb
+    db_uri: ./storage/index
+    container_name: null
+    overwrite: false
+
+embed_text:
+  model_id: default_embedding_model
+  vector_store_id: default_vector_store
+
+extract_graph:
+  # The mREBEL strategy runs locally via Hugging Face, so no chat model is required.
+  entity_types: [organization, person, geo, event]
+  max_gleanings: 1
+  strategy:
+    type: huggingface_mrebel
+    model_name: Babelscape/mrebel-base
+    max_input_length: 512
+    max_new_tokens: 256
+    num_beams: 3
+
+summarize_descriptions:
+  model_id: default_chat_model
+  prompt: "prompts/summarize_descriptions.txt"
+  max_length: 2000
+
+extract_claims:
+  enabled: false
+  model_id: default_chat_model
+  prompt: "prompts/extract_claims.txt"
+  description: "Any claims or facts that could be relevant to information discovery."
+  max_gleanings: 1
+
+community_reports:
+  model_id: default_chat_model
+  graph_prompt: "prompts/community_report_graph.txt"
+  text_prompt: "prompts/community_report_text.txt"
+  max_length: 2000
+  max_input_length: 8000
+
+local_search:
+  chat_model_id: default_chat_model
+  embedding_model_id: default_embedding_model
+  prompt: "prompts/local_search_system_prompt.txt"
+
+global_search:
+  chat_model_id: default_chat_model
+  map_prompt: "prompts/global_search_map_system_prompt.txt"
+  reduce_prompt: "prompts/global_search_reduce_system_prompt.txt"
+  knowledge_prompt: "prompts/global_search_knowledge_system_prompt.txt"
+
+basic_search:
+  chat_model_id: default_chat_model
+  embedding_model_id: default_embedding_model
+  prompt: "prompts/basic_search_system_prompt.txt"
