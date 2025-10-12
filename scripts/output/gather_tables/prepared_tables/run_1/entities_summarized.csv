@@ -1,0 +1,30 @@
+name,type,summary
+MOLDTRANS-TUR,ORGANIZATION,A limited liability company (SRL) that filed administrative litigation seeking annulment of unfavorable administrative acts and issuance of a favorable individual administrative act.
+AUTOGARA INTERNAȚIONALĂ CHIȘINĂU,ORGANIZATION,A limited liability company (SRL) that jointly filed administrative actions with MoldTrans-Tur against Chișinău municipal authorities.
+PRIMĂRIA MUNICIPIULUI CHIȘINĂU,INSTITUTION,"The City Hall of Chișinău, respondent in multiple administrative cases."
+CONSILIUL MUNICIPAL CHIȘINĂU,INSTITUTION,"The Chișinău Municipal Council, respondent and appellant in the proceedings."
+ASOCIAȚIA DE COPROPRIETARI ÎN CONDOMINIU NR. 55/319,ORGANIZATION,A homeowners’ association listed as third party/intervenor in the case.
+AGENȚIA PROPRIETĂȚII PUBLICE,INSTITUTION,Public Property Agency named as respondent in later filings.
+AGENȚIA SERVICII PUBLICE,INSTITUTION,Public Services Agency referenced as a third party in the administrative dispute.
+FIVA,ORGANIZATION,A limited liability company (SRL) mentioned as a third party in the dispute.
+DT-PRO BUSINESS,ORGANIZATION,A limited liability company (SRL) referenced as a third party.
+ÎNTREPRINDEREA INDIVIDUALĂ DAN ȚURCAN LIDIA,ORGANIZATION,A sole proprietorship cited as a third party.
+SPERANȚA UNIC,ORGANIZATION,A company (SA “Speranța-Unic”) whose earlier action was admitted and later renounced in related proceedings.
+"JUDECĂTORIA CHIȘINĂU, SEDIUL BUIUCANI",COURT,First-instance court that issued the 6 August 2018 judgment.
+"JUDECĂTORIA CHIȘINĂU, SEDIUL RÂȘCANI",COURT,First-instance court handling re-trial and subsequent connected cases.
+CURTEA DE APEL CHIȘINĂU,COURT,Court of Appeal that issued decisions on 7 Feb 2019 and 3 May 2023.
+CURTEA SUPREMĂ DE JUSTIȚIE,COURT,"Supreme Court of Justice that admitted a 2019 recourse, scheduled an admissibility hearing, and ruled on the acceleration request."
+HOTĂRÂREA 6 AUGUST 2018 (JUDECĂTORIA CHIȘINĂU – BUIUCANI),DOCUMENT,First-instance judgment later affected by appellate and supreme court decisions.
+DECIZIA 7 FEBRUARIE 2019 (CURTEA DE APEL CHIȘINĂU),DOCUMENT,Appellate decision (7 Feb 2019) that rejected appeals and maintained the 2018 judgment.
+DECIZIA 20 NOIEMBRIE 2019 (CURTEA SUPREMĂ DE JUSTIȚIE),DOCUMENT,"Supreme Court decision admitting recourse, quashing prior decisions, and remanding for re-trial (20 Nov 2019)."
+ÎNCHEIEREA 1 IULIE 2021 (JUDECĂTORIA CHIȘINĂU – RÂȘCANI),DOCUMENT,Ruling dated 1 July 2021 concerning the administrative case initiated on 11 March 2021.
+ÎNCHEIERILE 2 NOIEMBRIE 2021 (JUDECĂTORIA CHIȘINĂU – RÂȘCANI),DOCUMENT,Rulings dated 2 Nov 2021 ordering the connection of cases 3-2758/21 and 3-2759/21 with the earlier case before Judge Ciumac.
+DECIZIA 3 MAI 2023 (CURTEA DE APEL CHIȘINĂU),DOCUMENT,Appeal decision (3 May 2023) adverse to MoldTrans-Tur and Autogara Internațională Chișinău.
+MITROPOLIA BASARABIEI,ORGANIZATION,Religious organization (Metropolis of Bessarabia) involved in a separate litigation concerning church property (2003 contract).
+CONSILIUL SUPERIOR AL MAGISTRATURII,INSTITUTION,Judicial self-governance body mentioned in first-instance challenges (Judge Stănilă’s docket).
+CONSILIUL SUPERIOR AL PROCURORILOR,INSTITUTION,Prosecutorial self-governance body mentioned in first-instance challenges (Judge Stănilă’s docket).
+DIANA STĂNILĂ,PERSON,"Judge at the Supreme Court noted for a heavy caseload and membership in special panels, affecting scheduling."
+VITALII CIUMAC,PERSON,"Judge of the Chișinău court (Râșcani) who handled connected cases (e.g., case no. 3-4645/2019)."
+ART. 6 §1 CEDO,LAW,"Article 6(1) of the European Convention on Human Rights (ECHR) on reasonable time in civil proceedings, invoked as a standard."
+CODUL ADMINISTRATIV,LAW,"Administrative Code, which provides the procedural framework for administrative litigation."
+CODUL DE PROCEDURĂ CIVILĂ,LAW,"Civil Procedure Code, applied supplementarily to administrative cases."

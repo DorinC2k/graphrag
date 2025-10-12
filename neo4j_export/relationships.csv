@@ -1,0 +1,18 @@
+start_id,end_id,type,summary,strength
+30,31,RELATED_TO,MoldTrans-Tur sued the Chișinău City Hall in administrative litigation.,8
+32,31,RELATED_TO,Autogara Internațională Chișinău co-sued the City Hall in the same matter.,8
+30,33,RELATED_TO,MoldTrans-Tur sued the Municipal Council seeking annulment of unfavorable acts and an obligation to issue a favorable act.,8
+32,33,RELATED_TO,Autogara co-sued the Municipal Council in the administrative litigation.,8
+34,30,RELATED_TO,The homeowners’ association participated as a third party in the case involving MoldTrans-Tur.,5
+35,36,RELATED_TO,The Court of Appeal upheld the 2018 Buiucani judgment (decision of 7 Feb 2019).,7
+37,38,RELATED_TO,The Supreme Court quashed the 7 Feb 2019 appellate decision (decision of 20 Nov 2019).,9
+37,36,RELATED_TO,The Supreme Court quashed the 6 Aug 2018 first-instance judgment (decision of 20 Nov 2019).,9
+37,39,RELATED_TO,The Supreme Court remanded the case for re-trial to the Chișinău Court (Râșcani seat).,8
+30,37,RELATED_TO,MoldTrans-Tur filed a recourse and an acceleration request; the Supreme Court scheduled an admissibility hearing and later denied the acceleration request.,7
+40,37,RELATED_TO,Judge Diana Stănilă is a member of the Supreme Court; her heavy docket of CSM/CSP cases influences scheduling.,6
+41,39,RELATED_TO,Judge Vitalii Ciumac presided over connected cases (including case no. 3-4645/2019).,6
+37,42,RELATED_TO,The Supreme Court invoked Article 6(1) ECHR on reasonable time to assess the case’s duration.,6
+43,44,RELATED_TO,The Administrative Code governs administrative court proceedings.,7
+45,44,RELATED_TO,The Civil Procedure Code applies supplementarily in administrative litigation.,7
+46,35,RELATED_TO,"In the separate church-property case, the Court of Appeal (Dec 2017) admitted the Metropolis’s appeal (regarding a 2003 contract).",5
+46,37,RELATED_TO,"In the same case, the Supreme Court (Jan 2017) admitted the Metropolis’s recourse and ordered a re-trial.",5

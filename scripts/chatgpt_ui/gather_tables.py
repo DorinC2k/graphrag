@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert ChatGPT UI markdown tables into CSV files for GraphRAG."""
+"""Convert ChatGPT UI markdown tables and CSV files into CSVs for GraphRAG."""
 from __future__ import annotations
 
 import argparse
@@ -180,6 +180,107 @@ def collect_tables(texts: Iterable[str]) -> tuple[list[dict[str, str]], list[dic
     return entities, relationships, claims
 
 
+# ---------------- CSV support ----------------
+
+def _first_key(d: dict[str, str], *candidates: str) -> str:
+    for k in candidates:
+        if k in d:
+            return k
+    return ""
+
+
+def collect_from_csv(paths: list[Path]) -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[str, str]]]:
+    entities: list[dict[str, str]] = []
+    relationships: list[dict[str, str]] = []
+    claims: list[dict[str, str]] = []
+
+    for p in paths:
+        if p.suffix.lower() != ".csv" or not p.is_file():
+            continue
+        with p.open(encoding="utf-8", newline="") as fh:
+            reader = csv.DictReader(fh)
+            if not reader.fieldnames:
+                continue
+            # normalise header keys once per file (lower + strip)
+            field_map = {h: re.sub(r"\s+", " ", h.strip().lower()) for h in reader.fieldnames}
+            inverse = {v: k for k, v in field_map.items()}
+
+            def has_all(*need: str) -> bool:
+                return all(n in inverse for n in need)
+
+            # Try to classify this CSV by available columns.
+            # 1) Entities
+            ent_name = next((inverse[k] for k in ("entity_name", "name") if k in inverse), None)
+            ent_type = next((inverse[k] for k in ("type", "entity_type") if k in inverse), None)
+            ent_summary = next((inverse[k] for k in ("summary", "description", "description_list") if k in inverse), None)
+
+            # 2) Relationships
+            rel_src = next((inverse[k] for k in ("source", "subject", "from") if k in inverse), None)
+            rel_dst = next((inverse[k] for k in ("target", "object", "to") if k in inverse), None)
+            rel_summary = next((inverse[k] for k in ("summary", "description") if k in inverse), None)
+            rel_strength = next((inverse[k] for k in ("strength", "weight", "confidence") if k in inverse), None)
+            rel_type = next((inverse[k] for k in ("type", "predicate", "relationship") if k in inverse), None)
+
+            # 3) Claims
+            cl_subj = inverse.get("subject")
+            cl_obj = inverse.get("object")
+            cl_cat = next((inverse[k] for k in ("category", "claimtype") if k in inverse), None)
+            cl_status = inverse.get("status")
+            cl_desc = next((inverse[k] for k in ("description", "summary") if k in inverse), None)
+            cl_evid = next((inverse[k] for k in ("evidence", "quote", "source text") if k in inverse), None)
+            cl_src_file = next((inverse[k] for k in ("source", "provenance", "binder") if k in inverse), None)
+            cl_start = next((inverse[k] for k in ("start", "date start") if k in inverse), None)
+            cl_end = next((inverse[k] for k in ("end", "date end") if k in inverse), None)
+
+            # Read rows once and dispatch
+            for row in reader:
+                # Entities row?
+                if ent_name:
+                    name = (row.get(ent_name) or "").strip()
+                    if name:
+                        entities.append({
+                            "name": name,
+                            "type": (row.get(ent_type) or "").strip() if ent_type else "",
+                            "summary": (
+                                (row.get(ent_summary) or "").strip()
+                                if ent_summary else ""
+                            ),
+                        })
+                        # continue checking others — same CSV may contain mixed columns
+
+                # Relationships row?
+                if rel_src and rel_dst:
+                    src = (row.get(rel_src) or "").strip()
+                    dst = (row.get(rel_dst) or "").strip()
+                    if src and dst:
+                        relationships.append({
+                            "source": src,
+                            "target": dst,
+                            "summary": (row.get(rel_summary) or "").strip() if rel_summary else "",
+                            "strength": (row.get(rel_strength) or "").strip() if rel_strength else "",
+                            "type": (row.get(rel_type) or "").strip() if rel_type else "",
+                        })
+
+                # Claims row?
+                if cl_subj and cl_obj and cl_cat and cl_status and cl_desc and cl_evid:
+                    subj = (row.get(cl_subj) or "").strip()
+                    obj = (row.get(cl_obj) or "").strip()
+                    if subj and obj:
+                        claims.append({
+                            "subject": subj,
+                            "object": obj,
+                            "category": (row.get(cl_cat) or "").strip(),
+                            "status": (row.get(cl_status) or "").strip(),
+                            "description": (row.get(cl_desc) or "").strip(),
+                            "evidence": (row.get(cl_evid) or "").strip(),
+                            "source_file": (row.get(cl_src_file) or "").strip() if cl_src_file else "",
+                            "start_date": (row.get(cl_start) or "").strip() if cl_start else "",
+                            "end_date": (row.get(cl_end) or "").strip() if cl_end else "",
+                        })
+
+    return entities, relationships, claims
+
+
 def write_csv(path: Path, fieldnames: list[str], rows: Iterable[dict[str, str]]) -> None:
     with path.open("w", encoding="utf-8", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
@@ -190,19 +291,38 @@ def write_csv(path: Path, fieldnames: list[str], rows: Iterable[dict[str, str]])
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input-dir", required=True, type=Path)
+    parser.add_argument("--input-dir", required=True, type=Path,
+                        help="Directory OR single file path containing .md/.txt/.markdown and/or .csv")
     parser.add_argument("--out-dir", required=True, type=Path)
     args = parser.parse_args()
 
+    if not args.input_dir.exists():
+        raise SystemExit(f"--input-dir does not exist: {args.input_dir}")
+
+    # Collect candidate paths
+    if args.input_dir.is_dir():
+        all_paths = sorted(args.input_dir.glob("**/*"))
+    else:
+        # allow single file
+        all_paths = [args.input_dir]
+
+    # 1) Markdown / text inputs
     texts: list[str] = []
-    for path in sorted(args.input_dir.glob("**/*")):
+    for path in all_paths:
         if path.is_dir():
             continue
-        if path.suffix.lower() not in {".txt", ".md", ".markdown"}:
-            continue
-        texts.append(path.read_text(encoding="utf-8"))
+        if path.suffix.lower() in {".txt", ".md", ".markdown"}:
+            texts.append(path.read_text(encoding="utf-8"))
 
-    entities, relationships, claims = collect_tables(texts)
+    md_entities, md_relationships, md_claims = collect_tables(texts)
+
+    # 2) CSV inputs
+    csv_entities, csv_relationships, csv_claims = collect_from_csv(all_paths)
+
+    # Merge
+    entities = md_entities + csv_entities
+    relationships = md_relationships + csv_relationships
+    claims = md_claims + csv_claims
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -234,4 +354,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

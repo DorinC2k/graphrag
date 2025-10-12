@@ -1,0 +1,2 @@
+binder_path,size_bytes,approx_tokens,source_files
+C:\development\graphrag\scripts\output\binders\binder_00001.txt,30454,6893,C:\development\graphrag\tests\fixtures\huggingface\input\77008_3ra-966_23.txt;C:\development\graphrag\tests\fixtures\huggingface\input\77009_3ra-998_23.txt

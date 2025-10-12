@@ -1,0 +1,92 @@
+("entity" ||| MOLDTRANS-TUR ||| ORGANIZATION ||| A limited liability company (SRL) that filed administrative litigation seeking annulment of unfavorable administrative acts and issuance of a favorable individual administrative act.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| AUTOGARA INTERNAȚIONALĂ CHIȘINĂU ||| ORGANIZATION ||| A limited liability company (SRL) that jointly filed administrative actions with MoldTrans-Tur against Chișinău municipal authorities.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| PRIMĂRIA MUNICIPIULUI CHIȘINĂU ||| INSTITUTION ||| The City Hall of Chișinău, respondent in multiple administrative cases.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| CONSILIUL MUNICIPAL CHIȘINĂU ||| INSTITUTION ||| The Chișinău Municipal Council, respondent and appellant in the proceedings.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| ASOCIAȚIA DE COPROPRIETARI ÎN CONDOMINIU NR. 55/319 ||| ORGANIZATION ||| A homeowners’ association listed as third party/intervenor in the case.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| AGENȚIA PROPRIETĂȚII PUBLICE ||| INSTITUTION ||| Public Property Agency named as respondent in later filings.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| AGENȚIA SERVICII PUBLICE ||| INSTITUTION ||| Public Services Agency referenced as a third party in the administrative dispute.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| FIVA ||| ORGANIZATION ||| A limited liability company (SRL) mentioned as a third party in the dispute.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| DT-PRO BUSINESS ||| ORGANIZATION ||| A limited liability company (SRL) referenced as a third party.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| ÎNTREPRINDEREA INDIVIDUALĂ DAN ȚURCAN LIDIA ||| ORGANIZATION ||| A sole proprietorship cited as a third party.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("entity" ||| SPERANȚA UNIC ||| ORGANIZATION ||| A company (SA “Speranța-Unic”) whose earlier action was admitted and later renounced in related proceedings.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("entity" ||| JUDECĂTORIA CHIȘINĂU, SEDIUL BUIUCANI ||| COURT ||| First-instance court that issued the 6 August 2018 judgment.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("entity" ||| JUDECĂTORIA CHIȘINĂU, SEDIUL RÂȘCANI ||| COURT ||| First-instance court handling re-trial and subsequent connected cases.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("entity" ||| CURTEA DE APEL CHIȘINĂU ||| COURT ||| Court of Appeal that issued decisions on 7 Feb 2019 and 3 May 2023.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("entity" ||| CURTEA SUPREMĂ DE JUSTIȚIE ||| COURT ||| Supreme Court of Justice that admitted a 2019 recourse, scheduled an admissibility hearing, and ruled on the acceleration request.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("entity" ||| HOTĂRÂREA 6 AUGUST 2018 (JUDECĂTORIA CHIȘINĂU – BUIUCANI) ||| DOCUMENT ||| First-instance judgment later affected by appellate and supreme court decisions.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("entity" ||| DECIZIA 7 FEBRUARIE 2019 (CURTEA DE APEL CHIȘINĂU) ||| DOCUMENT ||| Appellate decision (7 Feb 2019) that rejected appeals and maintained the 2018 judgment.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("entity" ||| DECIZIA 20 NOIEMBRIE 2019 (CURTEA SUPREMĂ DE JUSTIȚIE) ||| DOCUMENT ||| Supreme Court decision admitting recourse, quashing prior decisions, and remanding for re-trial (20 Nov 2019).) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("entity" ||| ÎNCHEIEREA 1 IULIE 2021 (JUDECĂTORIA CHIȘINĂU – RÂȘCANI) ||| DOCUMENT ||| Ruling dated 1 July 2021 concerning the administrative case initiated on 11 March 2021.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("entity" ||| ÎNCHEIERILE 2 NOIEMBRIE 2021 (JUDECĂTORIA CHIȘINĂU – RÂȘCANI) ||| DOCUMENT ||| Rulings dated 2 Nov 2021 ordering the connection of cases 3-2758/21 and 3-2759/21 with the earlier case before Judge Ciumac.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("entity" ||| DECIZIA 3 MAI 2023 (CURTEA DE APEL CHIȘINĂU) ||| DOCUMENT ||| Appeal decision (3 May 2023) adverse to MoldTrans-Tur and Autogara Internațională Chișinău.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("entity" ||| MITROPOLIA BASARABIEI ||| ORGANIZATION ||| Religious organization (Metropolis of Bessarabia) involved in a separate litigation concerning church property (2003 contract).) Provenance: P-AI-GraphRAG/Documents/law-cases/77009_3ra-998_23.txt#page=1
+---
+("entity" ||| CONSILIUL SUPERIOR AL MAGISTRATURII ||| INSTITUTION ||| Judicial self-governance body mentioned in first-instance challenges (Judge Stănilă’s docket).) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("entity" ||| CONSILIUL SUPERIOR AL PROCURORILOR ||| INSTITUTION ||| Prosecutorial self-governance body mentioned in first-instance challenges (Judge Stănilă’s docket).) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("entity" ||| DIANA STĂNILĂ ||| PERSON ||| Judge at the Supreme Court noted for a heavy caseload and membership in special panels, affecting scheduling.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("entity" ||| VITALII CIUMAC ||| PERSON ||| Judge of the Chișinău court (Râșcani) who handled connected cases (e.g., case no. 3-4645/2019).) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("entity" ||| ART. 6 §1 CEDO ||| LAW ||| Article 6(1) of the European Convention on Human Rights (ECHR) on reasonable time in civil proceedings, invoked as a standard.) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("entity" ||| CODUL ADMINISTRATIV ||| LAW ||| Administrative Code, which provides the procedural framework for administrative litigation.) Provenance: P-AI-GraphRAG/Documents/law-cases/77009_3ra-998_23.txt#page=4
+---
+("entity" ||| CODUL DE PROCEDURĂ CIVILĂ ||| LAW ||| Civil Procedure Code, applied supplementarily to administrative cases.) Provenance: P-AI-GraphRAG/Documents/law-cases/77009_3ra-998_23.txt#page=4
+---
+("relationship" ||| MOLDTRANS-TUR ||| PRIMĂRIA MUNICIPIULUI CHIȘINĂU ||| MoldTrans-Tur sued the Chișinău City Hall in administrative litigation. ||| 8) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("relationship" ||| AUTOGARA INTERNAȚIONALĂ CHIȘINĂU ||| PRIMĂRIA MUNICIPIULUI CHIȘINĂU ||| Autogara Internațională Chișinău co-sued the City Hall in the same matter. ||| 8) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("relationship" ||| MOLDTRANS-TUR ||| CONSILIUL MUNICIPAL CHIȘINĂU ||| MoldTrans-Tur sued the Municipal Council seeking annulment of unfavorable acts and an obligation to issue a favorable act. ||| 8) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("relationship" ||| AUTOGARA INTERNAȚIONALĂ CHIȘINĂU ||| CONSILIUL MUNICIPAL CHIȘINĂU ||| Autogara co-sued the Municipal Council in the administrative litigation. ||| 8) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("relationship" ||| ASOCIAȚIA DE COPROPRIETARI ÎN CONDOMINIU NR. 55/319 ||| MOLDTRANS-TUR ||| The homeowners’ association participated as a third party in the case involving MoldTrans-Tur. ||| 5) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=1
+---
+("relationship" ||| CURTEA DE APEL CHIȘINĂU ||| HOTĂRÂREA 6 AUGUST 2018 (JUDECĂTORIA CHIȘINĂU – BUIUCANI) ||| The Court of Appeal upheld the 2018 Buiucani judgment (decision of 7 Feb 2019). ||| 7) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("relationship" ||| CURTEA SUPREMĂ DE JUSTIȚIE ||| DECIZIA 7 FEBRUARIE 2019 (CURTEA DE APEL CHIȘINĂU) ||| The Supreme Court quashed the 7 Feb 2019 appellate decision (decision of 20 Nov 2019). ||| 9) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("relationship" ||| CURTEA SUPREMĂ DE JUSTIȚIE ||| HOTĂRÂREA 6 AUGUST 2018 (JUDECĂTORIA CHIȘINĂU – BUIUCANI) ||| The Supreme Court quashed the 6 Aug 2018 first-instance judgment (decision of 20 Nov 2019). ||| 9) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("relationship" ||| CURTEA SUPREMĂ DE JUSTIȚIE ||| JUDECĂTORIA CHIȘINĂU, SEDIUL RÂȘCANI ||| The Supreme Court remanded the case for re-trial to the Chișinău Court (Râșcani seat). ||| 8) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("relationship" ||| MOLDTRANS-TUR ||| CURTEA SUPREMĂ DE JUSTIȚIE ||| MoldTrans-Tur filed a recourse and an acceleration request; the Supreme Court scheduled an admissibility hearing and later denied the acceleration request. ||| 7) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("relationship" ||| DIANA STĂNILĂ ||| CURTEA SUPREMĂ DE JUSTIȚIE ||| Judge Diana Stănilă is a member of the Supreme Court; her heavy docket of CSM/CSP cases influences scheduling. ||| 6) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("relationship" ||| VITALII CIUMAC ||| JUDECĂTORIA CHIȘINĂU, SEDIUL RÂȘCANI ||| Judge Vitalii Ciumac presided over connected cases (including case no. 3-4645/2019). ||| 6) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=2
+---
+("relationship" ||| CURTEA SUPREMĂ DE JUSTIȚIE ||| ART. 6 §1 CEDO ||| The Supreme Court invoked Article 6(1) ECHR on reasonable time to assess the case’s duration. ||| 6) Provenance: P-AI-GraphRAG/Documents/law-cases/77008_3ra-966_23.txt#page=3
+---
+("relationship" ||| CODUL ADMINISTRATIV ||| CONTENCIOS ADMINISTRATIV (PROCEEDINGS) ||| The Administrative Code governs administrative court proceedings. ||| 7) Provenance: P-AI-GraphRAG/Documents/law-cases/77009_3ra-998_23.txt#page=4
+---
+("relationship" ||| CODUL DE PROCEDURĂ CIVILĂ ||| CONTENCIOS ADMINISTRATIV (PROCEEDINGS) ||| The Civil Procedure Code applies supplementarily in administrative litigation. ||| 7) Provenance: P-AI-GraphRAG/Documents/law-cases/77009_3ra-998_23.txt#page=4
+---
+("relationship" ||| MITROPOLIA BASARABIEI ||| CURTEA DE APEL CHIȘINĂU ||| In the separate church-property case, the Court of Appeal (Dec 2017) admitted the Metropolis’s appeal (regarding a 2003 contract). ||| 5) Provenance: P-AI-GraphRAG/Documents/law-cases/77009_3ra-998_23.txt#page=3
+---
+("relationship" ||| MITROPOLIA BASARABIEI ||| CURTEA SUPREMĂ DE JUSTIȚIE ||| In the same case, the Supreme Court (Jan 2017) admitted the Metropolis’s recourse and ordered a re-trial. ||| 5) Provenance: P-AI-GraphRAG/Documents/law-cases/77009_3ra-998_23.txt#page=3
+<END>

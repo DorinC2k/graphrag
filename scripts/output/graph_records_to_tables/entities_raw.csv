@@ -1,0 +1,40 @@
+name,type,description
+MOLDTRANS -TUR,ORGANIZATION,A limited liability company (SRL) that filed administrative litigation seeking annulment of unfavorable administrative acts and issuance of a favorable individual administrative act.|||0.94|||„MoldTrans -Tur”
+AUTOGARA INTERNAȚIONALĂ CHIȘINĂU,ORGANIZATION,A limited liability company (SRL) that jointly filed administrative actions with MoldTrans-Tur against Chișinău municipal authorities.|||0.94|||„Autogara Internațională Chișinău”
+PRIMĂRIA MUNICIPIULUI CHIȘINĂU,INSTITUTION,"The City Hall of Chișinău, respondent in multiple administrative cases.|||0.98|||„Primăriei municipiului Chișinău”"
+CONSILIUL MUNICIPAL CHIȘINĂU,INSTITUTION,"The Chișinău Municipal Council, respondent and appellant in the proceedings.|||0.98|||„Consiliului municipal Chișinău”"
+ASOCIAȚIA DE COPROPRIETARI ÎN CONDOMINIU NR. 55/319,ORGANIZATION,A homeowners’ association listed as third party/intervenor in the case.|||0.88|||„Asociația de Coproprietari în Condominiu nr. 55/319”
+AGENȚIA SERVICII PUBLICE,INSTITUTION,Public Services Agency referenced as a third party in the administrative dispute.|||0.76|||„Agenția Servicii Publice”
+AGENȚIA PROPRIETĂȚII PUBLICE,INSTITUTION,Public Property Agency named as respondent in later filings.|||0.84|||„Agenției Proprietății Publice”
+FIVA,ORGANIZATION,A limited liability company (SRL) mentioned as a third party in the dispute.|||0.75|||„Societatea cu Răspundere Limitată „Fiva””
+DT -PRO BUSINESS,ORGANIZATION,A limited liability company (SRL) referenced as a third party.|||0.75|||„„DT -Pro- Business””
+ÎNTREPRINDEREA INDIVIDUALĂ „DANȚURCAN LIDIA”,ORGANIZATION,A sole proprietorship cited as a third party.|||0.78|||„Întreprinderea Individuală „DanȚurcan Lidia””
+SPERANȚA UNIC,ORGANIZATION,A company (noted as SA/”Speranța-Unic”) whose earlier action was admitted/then later renounced in related proceedings.|||0.80|||„„Speranța - Unic””
+"JUDECĂTORIA CHIȘINĂU, SEDIUL BUIUCANI",COURT,"First-instance court that issued the 6 August 2018 judgment.|||0.97|||„Judecătoriei Chișinău, sediul Buiucani”"
+"JUDECĂTORIA CHIȘINĂU, SEDIUL RÂȘCANI",COURT,"First-instance court handling re-trial and subsequent connected cases.|||0.97|||„Judecătoria Chișinău, sediul Râşcani”"
+CURTEA DE APEL CHIȘINĂU,COURT,Court of Appeal that issued decisions on 7 Feb 2019 and 3 May 2023.|||0.98|||„Curții de Apel Chișinău”
+CURTEA SUPREMĂ DE JUSTIȚIE,COURT,"Supreme Court of Justice that admitted a 2019 recurs, scheduled admissibility hearing, and ruled on acceleration.|||0.99|||„Curții Supreme de Justiție”"
+DIANA STĂNILĂ,PERSON,Judge at the Supreme Court noted for heavy caseload and membership in special panels.|||0.93|||„judecătorul Diana Stănilă”
+VITALII CIUMAC,PERSON,"Judge of first instance to whom connected cases (e.g., 3-4645/2019) were assigned.|||0.86|||„judecătorului Vitalii Ciumac”"
+CONSILIUL SUPERIOR AL MAGISTRATURII,INSTITUTION,Governing body of judges referenced in first-instance challenges.|||0.86|||„Consiliului Superior al Magistraturii”
+CONSILIUL SUPERIOR AL PROCURORILOR,INSTITUTION,Governing body of prosecutors referenced in first-instance challenges.|||0.86|||„Consiliului Superior al Procurorilor”
+CURTEA EUROPEANĂ PENTRU DREPTURILE OMULUI,INSTITUTION,The European Court of Human Rights cited for Article 6 jurisprudence on reasonable time.|||0.92|||„Curții Europene pentru Drepturile Omului”
+CODUL ADMINISTRATIV,LAW,The Administrative Code cited for procedural framework in administrative litigation.|||0.95|||„Codul administrativ”
+CODUL DE PROCEDURĂ CIVILĂ,LAW,Civil Procedure Code provisions applied supplementarily to administrative cases.|||0.95|||„Codului de procedură civilă”
+LEGEA NR. 26/10 MARTIE 2022,LAW,Law on measures for selecting candidates to judicial/prosecutorial self-administration bodies.|||0.88|||„Legii nr. 26 din 10 martie 2022”
+LEGEA NR. 65/30 MARTIE 2023,LAW,Law on external evaluation of judges and candidates for the Supreme Court of Justice.|||0.88|||„Legii nr. 65 din 30 martie 2023”
+LEGEA NR. 252/17 AUGUST 2023,LAW,Law on external evaluation of judges and prosecutors and amendments to normative acts.|||0.88|||„Legii nr. 252 din 17 august 2023”
+ART. 6 §1 CEDO,LAW,"Article 6(1) ECHR on reasonable time in civil proceedings, invoked as standard.|||0.92|||„art. 6 paragraful 1 din CEDO”"
+CHIȘINĂU,GEO,"Municipality frequently referenced; locus of courts, parties, and administrative authorities.|||0.95|||„Chișinău”"
+PRIMARUL GENERAL AL MUNICIPIULUI CHIȘINĂU,PERSON,"Office of the Mayor General of Chișinău, appellant/respondent alongside the Council.|||0.78|||„Primarul general al municipiului Chișinău”"
+DOSAR 3RA -966/23,CASE,Supreme Court recourse case concerning MoldTrans-Tur et al.; acceleration request rejected.|||0.93|||„Dosarul nr. 3ra -966/23”
+NR. PIGD 2 -21150216 -01-3RA-21092023,DOCUMENT,Internal registration/reference number associated with the recourse file.|||0.70|||„NR. PIGD 2 -21150216 -01-3ra-21092023”
+DECIZIA 3 MAI 2023 (CURTEA DE APEL CHIȘINĂU),DOCUMENT,Appeal decision adverse to MoldTrans-Tur and Autogara Internațională Chișinău.|||0.88|||„decizia din 3 mai 2023 a Curții de Apel Chișinău”
+HOTĂRÂREA 6 AUGUST 2018 (JUDECĂTORIA CHIȘINĂU – BUIUCANI),DOCUMENT,"First-instance judgment later affected by appellate and supreme court remedies.|||0.86|||„hotărârea din 6 august 2018 a Judecătoriei Chișinău, sediul Buiucani”"
+DECIZIA 7 FEBRUARIE 2019 (CURTEA DE APEL CHIȘINĂU),DOCUMENT,Decision that rejected appeals and maintained the 2018 judgment.|||0.86|||„decizia din 7 februarie 2019 a Curții de Apel Chișinău”
+DECIZIA 20 NOIEMBRIE 2019 (CURTEA SUPREMĂ DE JUSTIȚIE),DOCUMENT,"Supreme Court decision admitting recourse, quashing prior decisions, remanding for re-trial.|||0.90|||„zia din 20 noiembrie 2019 a Curții Supreme de Justiție”"
+ÎNCHEIEREA 1 IULIE 2021 (JUDECĂTORIA CHIȘINĂU – RÂȘCANI),DOCUMENT,Ruling concerning the administrative case initiated on 11 March 2021.|||0.80|||„încheierea din 1 iulie 2021”
+ÎNCHEIERILE 2 NOIEMBRIE 2021 (JUDECĂTORIA CHIȘINĂU – RÂȘCANI),DOCUMENT,Rulings ordering connection of cases 3-2758/21 and 3-2759/21 to 3-4645/2019 before Judge Vitalii Ciumac.|||0.84|||„Prin încheierea din 2 noiembrie 2021”
+CEREREA DE ACCELERARE 18 DECEMBRIE 2024,DOCUMENT,"Application by MoldTrans-Tur to accelerate examination of recourse admissibility.|||0.90|||„La 18 decembrie 2024, … cerere de accelerare”"
+ÎNCHEIEREA 6 IANUARIE 2025 (RESPINGERE ACCELERARE),DOCUMENT,Outcome rejecting the acceleration request with reasoning on workload and scheduling.|||0.92|||„6 ianuarie 2025”
+MITROPOLIA BASARABIEI,ORGANIZATION,"Religious organization party in a separate, later-described litigation concerning church property and a 2003 collaboration contract.|||0.83|||„Mitropolia Basarabiei”"
