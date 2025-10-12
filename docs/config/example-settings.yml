@@ -34,8 +34,10 @@ models:
 
 input:
   storage:
-    type: file
-    base_dir: "input"
+    type: blob
+    connection_string: ${AZURE_STORAGE_CONNECTION_STRING}
+    container_name: ${AZURE_STORAGE_CONTAINER}
+    base_dir: "law-cases"
   file_type: text
   max_files: null
   max_total_size_mb: null
