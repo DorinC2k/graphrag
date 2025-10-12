@@ -19,6 +19,11 @@ Versions of GraphRAG before 2.2.0 made extensive use of `max_tokens` and `logit_
 - The o-series models are much slower and more expensive. It may be useful to use an asymmetric approach to model use in your config: you can define as many models as you like in the `models` block of your settings.yaml and reference them by key for every workflow that requires a language model. You could use gpt-4o for indexing and o1 for query, for example. Experiment to find the right balance of cost, speed, and quality for your use case.
 - The o-series models contain a form of native native chain-of-thought reasoning that is absent in the non-o-series models. GraphRAG's prompts sometimes contain CoT because it was an effective technique with the gpt-4* series. It may be counterproductive with the o-series, so you may want to tune or even re-write large portions of the prompt templates (particularly for graph and claim extraction).
 
+GraphRAG's extract graph workflow now defaults to the Hugging Face
+`Babelscape/mrebel-base` model via the `huggingface_mrebel` strategy. Override
+the `extract_graph.strategy` section if you prefer to keep using the
+prompt-driven `graph_intelligence` approach.
+
 Example config with asymmetric model use:
 
 ```yaml
@@ -40,9 +45,15 @@ models:
 
 extract_graph:
   model_id: extraction_chat_model
-  prompt: "prompts/extract_graph.txt"
   entity_types: [organization,person,geo,event]
   max_gleanings: 1
+  strategy:
+    type: graph_intelligence
+    llm:
+      type: openai_chat
+      model: gpt-4o
+      api_key: ${GRAPHRAG_API_KEY}
+    extraction_prompt: "prompts/extract_graph.txt"
 
 ...
 

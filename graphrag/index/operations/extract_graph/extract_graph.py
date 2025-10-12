@@ -41,7 +41,7 @@ async def extract_graph(
         entity_types = DEFAULT_ENTITY_TYPES
     strategy = strategy or {}
     strategy_exec = _load_strategy(
-        strategy.get("type", ExtractEntityStrategyType.graph_intelligence)
+        strategy.get("type", ExtractEntityStrategyType.huggingface_mrebel)
     )
     strategy_config = {**strategy}
 

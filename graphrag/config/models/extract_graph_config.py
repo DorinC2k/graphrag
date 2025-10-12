@@ -4,6 +4,7 @@
 """Parameterization settings for the default configuration."""
 
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -43,13 +44,19 @@ class ExtractGraphConfig(BaseModel):
             ExtractEntityStrategyType,
         )
 
-        return self.strategy or {
-            "type": ExtractEntityStrategyType.graph_intelligence,
-            "llm": model_config.model_dump(),
-            "extraction_prompt": (Path(root_dir) / self.prompt).read_text(
-                encoding="utf-8"
-            )
-            if self.prompt
-            else None,
+        if self.strategy:
+            return self.strategy
+
+        default_strategy: dict[str, Any] = {
+            "type": ExtractEntityStrategyType.huggingface_mrebel,
             "max_gleanings": self.max_gleanings,
         }
+
+        # Retain compatibility with existing configs that provide a prompt even
+        # though the mREBEL strategy does not currently consume it.
+        if self.prompt:
+            default_strategy["prompt"] = (Path(root_dir) / self.prompt).read_text(
+                encoding="utf-8"
+            )
+
+        return default_strategy
