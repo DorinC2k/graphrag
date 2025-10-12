@@ -43,7 +43,12 @@ class ClaimExtractionConfig(BaseModel):
         self, root_dir: str, model_config: LanguageModelConfig
     ) -> dict:
         """Get the resolved claim extraction strategy."""
+        from graphrag.index.operations.extract_covariates.typing import (
+            ClaimExtractionStrategyType,
+        )
+
         return self.strategy or {
+            "type": ClaimExtractionStrategyType.graph_intelligence,
             "llm": model_config.model_dump(),
             "extraction_prompt": (Path(root_dir) / self.prompt).read_text(
                 encoding="utf-8"

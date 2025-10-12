@@ -22,7 +22,9 @@ Versions of GraphRAG before 2.2.0 made extensive use of `max_tokens` and `logit_
 GraphRAG's extract graph workflow now defaults to the Hugging Face
 `Babelscape/mrebel-base` model via the `huggingface_mrebel` strategy. Override
 the `extract_graph.strategy` section if you prefer to keep using the
-prompt-driven `graph_intelligence` approach.
+prompt-driven `graph_intelligence` approach. Claim extraction and description
+summarization can likewise be switched to the `huggingface_mrebel` strategy if
+you want those workflows to avoid calling a chat LLM.
 
 Example config with asymmetric model use:
 

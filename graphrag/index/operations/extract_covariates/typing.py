@@ -5,6 +5,7 @@
 
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 from graphrag.cache.pipeline_cache import PipelineCache
@@ -47,3 +48,13 @@ CovariateExtractStrategy = Callable[
     ],
     Awaitable[CovariateExtractionResult],
 ]
+
+
+class ClaimExtractionStrategyType(str, Enum):
+    """Strategy types for claim extraction."""
+
+    graph_intelligence = "graph_intelligence"
+    huggingface_mrebel = "huggingface_mrebel"
+
+    def __repr__(self) -> str:
+        return f'"{self.value}"'
