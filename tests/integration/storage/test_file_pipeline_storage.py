@@ -60,6 +60,44 @@ def test_find_respects_base_dir(tmp_path):
     assert items == [f"{base_dir}/a.txt"]
 
 
+def test_find_respects_max_count(tmp_path):
+    storage = FilePipelineStorage(root_dir=str(tmp_path))
+
+    for idx in range(3):
+        (tmp_path / f"file_{idx}.txt").write_text(f"file-{idx}")
+
+    items = list(
+        storage.find(
+            file_pattern=re.compile(r".*\.txt$"),
+            max_count=2,
+        )
+    )
+
+    assert len(items) == 2
+
+
+def test_find_respects_total_size_limit(tmp_path):
+    storage = FilePipelineStorage(root_dir=str(tmp_path))
+
+    tiny_file = tmp_path / "tiny.txt"
+    small_file = tmp_path / "small.txt"
+    large_file = tmp_path / "large.txt"
+    tiny_file.write_bytes(b"a" * 256 * 1024)
+    small_file.write_bytes(b"b" * 512 * 1024)
+    large_file.write_bytes(b"c" * 2 * 1024 * 1024)
+
+    items = list(
+        storage.find(
+            file_pattern=re.compile(r".*\.txt$"),
+            max_total_size_mb=1,
+        )
+    )
+
+    assert sorted(items) == sorted(
+        [(tiny_file.name, {}), (small_file.name, {})]
+    )
+
+
 async def test_get_creation_date():
     storage = FilePipelineStorage()
 

@@ -103,7 +103,8 @@ class BlobPipelineStorage(PipelineStorage):
         base_dir: str | None = None,
         progress: ProgressLogger | None = None,
         file_filter: dict[str, Any] | None = None,
-        max_count=-1,
+        max_count: int = -1,
+        max_total_size_mb: float | None = None,
     ) -> Iterator[tuple[str, dict[str, Any]]]:
         """Find blobs in a container using a file pattern, as well as a custom filter function.
 
@@ -155,17 +156,40 @@ class BlobPipelineStorage(PipelineStorage):
             all_blobs = list(
                 container_client.list_blobs(name_starts_with=prefix)
             )
+            max_total_size_bytes = (
+                int(max_total_size_mb * 1024 * 1024)
+                if max_total_size_mb is not None
+                else None
+            )
 
             num_loaded = 0
             num_total = len(all_blobs)
             num_filtered = 0
+            total_size_bytes = 0
             for blob in all_blobs:
                 match = file_pattern.search(blob.name)
                 if match:
                     group = match.groupdict()
                     if item_filter(group):
+                        blob_size = blob.size or 0
+                        if max_total_size_bytes is not None:
+                            if total_size_bytes + blob_size > max_total_size_bytes:
+                                num_filtered += 1
+                                if progress is not None:
+                                    progress(
+                                        _create_progress_status(
+                                            num_loaded, num_filtered, num_total
+                                        )
+                                    )
+                                if total_size_bytes >= max_total_size_bytes:
+                                    break
+                                continue
                         yield (_blobname(blob.name), group)
                         num_loaded += 1
+                        if max_total_size_bytes is not None:
+                            total_size_bytes += blob_size
+                            if total_size_bytes >= max_total_size_bytes:
+                                break
                         if max_count > 0 and num_loaded >= max_count:
                             break
                     else:

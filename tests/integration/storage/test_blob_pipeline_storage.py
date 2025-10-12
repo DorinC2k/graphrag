@@ -84,6 +84,68 @@ async def test_find_respects_base_dir():
         storage._delete_container()  # noqa: SLF001
 
 
+async def test_find_respects_max_count():
+    storage = BlobPipelineStorage(
+        connection_string=WELL_KNOWN_BLOB_STORAGE_KEY,
+        container_name="testmaxcount",
+    )
+    try:
+        for idx in range(3):
+            await storage.set(
+                f"input/file_{idx}.txt",
+                f"file-{idx}",
+                encoding="utf-8",
+            )
+
+        items = list(
+            storage.find(
+                base_dir="input",
+                file_pattern=re.compile(r".*\.txt$"),
+                max_count=2,
+            )
+        )
+
+        assert len(items) == 2
+    finally:
+        storage._delete_container()  # noqa: SLF001
+
+
+async def test_find_respects_total_size_limit():
+    storage = BlobPipelineStorage(
+        connection_string=WELL_KNOWN_BLOB_STORAGE_KEY,
+        container_name="testmaxsize",
+    )
+    try:
+        await storage.set(
+            "input/small.txt",
+            "hello",
+            encoding="utf-8",
+        )
+        await storage.set(
+            "input/tiny.txt",
+            "a" * 256 * 1024,
+            encoding="utf-8",
+        )
+        await storage.set(
+            "input/large.txt",
+            "a" * 2 * 1024 * 1024,
+            encoding="utf-8",
+        )
+
+        items = list(
+            storage.find(
+                base_dir="input",
+                file_pattern=re.compile(r".*\.txt$"),
+                max_total_size_mb=1,
+            )
+        )
+
+        item_names = sorted(item[0] for item in items)
+        assert item_names == ["input/small.txt", "input/tiny.txt"]
+    finally:
+        storage._delete_container()  # noqa: SLF001
+
+
 async def test_get_creation_date():
     storage = BlobPipelineStorage(
         connection_string=WELL_KNOWN_BLOB_STORAGE_KEY,

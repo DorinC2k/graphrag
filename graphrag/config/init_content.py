@@ -62,6 +62,8 @@ input:
     type: {graphrag_config_defaults.input.storage.type.value} # or blob
     base_dir: "{graphrag_config_defaults.input.storage.base_dir}"
   file_type: {graphrag_config_defaults.input.file_type.value} # [csv, text, json]
+  max_files: {graphrag_config_defaults.input.max_files}
+  max_total_size_mb: {graphrag_config_defaults.input.max_total_size_mb if graphrag_config_defaults.input.max_total_size_mb is not None else "null"}
   
 
 chunks:
