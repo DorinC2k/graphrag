@@ -22,7 +22,8 @@ class PipelineStorage(metaclass=ABCMeta):
         base_dir: str | None = None,
         progress: ProgressLogger | None = None,
         file_filter: dict[str, Any] | None = None,
-        max_count=-1,
+        max_count: int = -1,
+        max_total_size_mb: float | None = None,
     ) -> Iterator[tuple[str, dict[str, Any]]]:
         """Find files in the storage using a file pattern, as well as a custom filter function."""
 

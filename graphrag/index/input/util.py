@@ -30,6 +30,8 @@ async def load_files(
             base_dir=config.storage.base_dir,
             progress=progress,
             file_filter=config.file_filter,
+            max_count=config.max_files if config.max_files is not None else -1,
+            max_total_size_mb=config.max_total_size_mb,
         )
     )
 

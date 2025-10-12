@@ -261,6 +261,8 @@ class InputDefaults:
     encoding: str = "utf-8"
     file_pattern: str = ""
     file_filter: None = None
+    max_files: int | None = 100
+    max_total_size_mb: float | None = None
     text_column: str = "text"
     title_column: None = None
     metadata: None = None

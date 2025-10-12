@@ -43,7 +43,8 @@ class FilePipelineStorage(PipelineStorage):
         base_dir: str | None = None,
         progress: ProgressLogger | None = None,
         file_filter: dict[str, Any] | None = None,
-        max_count=-1,
+        max_count: int = -1,
+        max_total_size_mb: float | None = None,
     ) -> Iterator[tuple[str, dict[str, Any]]]:
         """Find files in the storage using a file pattern, as well as a custom filter function."""
 
@@ -69,20 +70,43 @@ class FilePipelineStorage(PipelineStorage):
                 search_path = root_path / base_path
 
         log.info("search %s for files matching %s", search_path, file_pattern.pattern)
+        max_total_size_bytes = (
+            int(max_total_size_mb * 1024 * 1024)
+            if max_total_size_mb is not None
+            else None
+        )
         all_files = list(search_path.rglob("**/*"))
         num_loaded = 0
         num_total = len(all_files)
         num_filtered = 0
+        total_size_bytes = 0
         for file in all_files:
             match = file_pattern.search(f"{file}")
             if match:
                 group = match.groupdict()
                 if item_filter(group):
+                    file_size = file.stat().st_size
+                    if max_total_size_bytes is not None:
+                        if total_size_bytes + file_size > max_total_size_bytes:
+                            num_filtered += 1
+                            if progress is not None:
+                                progress(
+                                    _create_progress_status(
+                                        num_loaded, num_filtered, num_total
+                                    )
+                                )
+                            if total_size_bytes >= max_total_size_bytes:
+                                break
+                            continue
                     filename = Path(file).as_posix().replace(root_path.as_posix(), "")
                     if filename.startswith("/"):
                         filename = filename[1:]
                     yield (filename, group)
                     num_loaded += 1
+                    if max_total_size_bytes is not None:
+                        total_size_bytes += file_size
+                        if total_size_bytes >= max_total_size_bytes:
+                            break
                     if max_count > 0 and num_loaded >= max_count:
                         break
                 else:

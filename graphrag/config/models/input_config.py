@@ -36,6 +36,20 @@ class InputConfig(BaseModel):
         description="The optional file filter for the input files.",
         default=graphrag_config_defaults.input.file_filter,
     )
+    max_files: int | None = Field(
+        description=(
+            "The maximum number of input files to process. Set to null to process"
+            " all matching files."
+        ),
+        default=graphrag_config_defaults.input.max_files,
+    )
+    max_total_size_mb: float | None = Field(
+        description=(
+            "The maximum combined size in megabytes for all input files. Set to"
+            " null to process all matching files regardless of total size."
+        ),
+        default=graphrag_config_defaults.input.max_total_size_mb,
+    )
     text_column: str = Field(
         description="The input text column to use.",
         default=graphrag_config_defaults.input.text_column,

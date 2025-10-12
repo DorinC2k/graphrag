@@ -119,7 +119,8 @@ class CosmosDBPipelineStorage(PipelineStorage):
         base_dir: str | None = None,
         progress: ProgressLogger | None = None,
         file_filter: dict[str, Any] | None = None,
-        max_count=-1,
+        max_count: int = -1,
+        max_total_size_mb: float | None = None,
     ) -> Iterator[tuple[str, dict[str, Any]]]:
         """Find documents in a Cosmos DB container using a file pattern regex and custom file filter (optional).
 
