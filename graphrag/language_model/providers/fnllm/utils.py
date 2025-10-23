@@ -12,6 +12,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from fnllm.base.config import JsonStrategy, RetryStrategy
 from fnllm.openai import AzureOpenAIConfig, OpenAIConfig, PublicOpenAIConfig
 from fnllm.openai.types.chat.parameters import OpenAIChatParameters
+from openai.types.shared_params.response_format_json_object import (
+    ResponseFormatJSONObject,
+)
 
 import graphrag.config.defaults as defs
 from graphrag.language_model.providers.fnllm.cache import FNLLMCacheProvider
@@ -130,6 +133,13 @@ def is_reasoning_model(model: str) -> bool:
     return model.lower() in {"o1", "o1-mini", "o3-mini"}
 
 
+def is_responses_model(model: str) -> bool:
+    """Return whether the model should be invoked with the Responses API."""
+
+    normalized = model.lower()
+    return normalized.startswith("gpt-4.1") or normalized.startswith("gpt-5")
+
+
 def get_openai_model_parameters_from_config(
     config: LanguageModelConfig,
 ) -> dict[str, Any]:
@@ -139,10 +149,27 @@ def get_openai_model_parameters_from_config(
 
 def get_openai_model_parameters_from_dict(config: dict[str, Any]) -> dict[str, Any]:
     """Get the model parameters for a given config, adjusting for reasoning API differences."""
+    model_name = config["model"]
+
+    if is_responses_model(model_name):
+        params: dict[str, Any] = {}
+        max_output_tokens = config.get("max_completion_tokens") or config.get("max_tokens")
+        if max_output_tokens is not None:
+            params["max_output_tokens"] = max_output_tokens
+        if config.get("temperature") is not None:
+            params["temperature"] = config.get("temperature")
+        if config.get("top_p") is not None:
+            params["top_p"] = config.get("top_p")
+        if config.get("response_format"):
+            response_format = config["response_format"]
+            if isinstance(response_format, ResponseFormatJSONObject):
+                params["text"] = {"format": response_format}
+        return params
+
     params = {
         "n": config.get("n"),
     }
-    if is_reasoning_model(config["model"]):
+    if is_reasoning_model(model_name):
         params["max_completion_tokens"] = config.get("max_completion_tokens")
         params["reasoning_effort"] = config.get("reasoning_effort")
     else:
