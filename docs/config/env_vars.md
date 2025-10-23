@@ -52,7 +52,7 @@ These settings control the text generation model used by the pipeline. Any setti
 | `GRAPHRAG_LLM_API_VERSION`                        | For AOAI (uses fallback) | The AOAI API version.                                                          | `str`   | `None`                |
 | `GRAPHRAG_LLM_API_ORGANIZATION`                   | For AOAI (uses fallback) | The AOAI organization.                                                         | `str`   | `None`                |
 | `GRAPHRAG_LLM_API_PROXY`                          |                          | The AOAI proxy.                                                                | `str`   | `None`                |
-| `GRAPHRAG_LLM_MODEL`                              |                          | The LLM model.                                                                 | `str`   | `gpt-4-turbo-preview` |
+| `GRAPHRAG_LLM_MODEL`                              |                          | The LLM model.                                                                 | `str`   | `gpt-5-nano` |
 | `GRAPHRAG_LLM_MAX_TOKENS`                         |                          | The maximum number of tokens.                                                  | `int`   | `4000`                |
 | `GRAPHRAG_LLM_REQUEST_TIMEOUT`                    |                          | The maximum number of seconds to wait for a response from the chat client.     | `int`   | `180`                 |
 | `GRAPHRAG_LLM_MODEL_SUPPORTS_JSON`                |                          | Indicates whether the given model supports JSON output mode. `True` to enable. | `str`   | `None`                |
