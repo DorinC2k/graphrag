@@ -2,7 +2,7 @@
 # This configuration uses:
 #   * The Hugging Face Babelscape/mrebel-base model for graph extraction.
 #   * A Hugging Face sentence-transformer for text embeddings.
-#   * Standard OpenAI chat models for summarization and query workflows.
+#   * The default OpenAI chat model (gpt-5-nano) for summarization and query workflows.
 #
 # Update the environment variables in your .env file to include:
 #   GRAPHRAG_API_KEY=<your OpenAI API key>
@@ -16,7 +16,7 @@ models:
     type: openai_chat
     auth_type: api_key
     api_key: ${GRAPHRAG_API_KEY}
-    model: gpt-4o
+    model: gpt-5-nano # Default GraphRAG chat model
     model_supports_json: true
     concurrent_requests: 32
     async_mode: threaded
