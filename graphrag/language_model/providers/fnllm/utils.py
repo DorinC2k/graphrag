@@ -156,8 +156,14 @@ def get_openai_model_parameters_from_dict(config: dict[str, Any]) -> dict[str, A
         max_output_tokens = config.get("max_completion_tokens") or config.get("max_tokens")
         if max_output_tokens is not None:
             params["max_output_tokens"] = max_output_tokens
-        if config.get("temperature") is not None:
-            params["temperature"] = config.get("temperature")
+        temperature = config.get("temperature")
+        if temperature is not None:
+            # Responses API models (gpt-4.1, gpt-5, etc.) currently only support the
+            # default temperature value. Sending an explicit value of ``0`` results in
+            # an ``unsupported_value`` error from the OpenAI API, so we omit the
+            # parameter in that situation and allow the service default to apply.
+            if not (temperature == 0 and is_responses_model(model_name)):
+                params["temperature"] = temperature
         if config.get("top_p") is not None:
             params["top_p"] = config.get("top_p")
         if config.get("response_format"):

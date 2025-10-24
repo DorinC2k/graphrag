@@ -64,7 +64,10 @@ models:
 - `responses` **list[str]** - If this model type is mock, this is a list of response strings to return.
 - `n` **int** - The number of completions to generate.
 - `max_tokens` **int** - The maximum number of output tokens. Not valid for o-series models.
-- `temperature` **float** - The temperature to use. Not valid for o-series models.
+- `temperature` **float** - The temperature to use. Not valid for o-series models. For
+  Responses API models (gpt-4.1*, gpt-5*), GraphRAG omits a configured value of `0`
+  so the OpenAI default (`1`) is applied, because those models do not support
+  overriding the temperature to zero.
 - `top_p` **float** - The top-p value to use. Not valid for o-series models.
 - `frequency_penalty` **float** - Frequency penalty for token generation. Not valid for o-series models.
 - `presence_penalty` **float** - Frequency penalty for token generation. Not valid for o-series models.

@@ -106,6 +106,7 @@ def test_openai_gpt5_requests_use_responses(
     assert "messages" not in captured_request
     assert captured_request["model"] == "gpt-5-nano"
     assert captured_request["input"][-1]["content"][0]["text"] == "hello"
+    assert "temperature" not in captured_request
 
 
 def test_openai_gpt5_json_mode_sets_response_format(
@@ -165,6 +166,7 @@ def test_azure_gpt5_requests_use_responses(
     assert response.output.content == "content"
     assert captured_request["model"] == "gpt5-deployment"
     assert captured_request["messages"][-1]["content"] == "hi"
+    assert "temperature" not in captured_request
 
 
 def test_azure_gpt5_json_mode_sets_response_format(
