@@ -68,6 +68,17 @@ class ModelFactory:
         -------
             An EmbeddingLLM instance.
         """
+        if (
+            model_type == ModelType.HuggingFaceEmbedding
+            and kwargs.get("config") is not None
+            and getattr(kwargs["config"], "api_base", None)
+        ):
+            # Always use the built-in remote-capable provider when targeting a
+            # Hugging Face endpoint. Test helpers may register lightweight
+            # implementations for local embeddings that do not support remote
+            # calls, so we bypass the registry in that scenario.
+            return HuggingFaceEmbeddingModel(**kwargs)
+
         if model_type not in cls._embedding_registry:
             msg = f"EmbeddingModel implementation '{model_type}' is not registered."
             raise ValueError(msg)
