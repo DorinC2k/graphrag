@@ -14,7 +14,7 @@ from fnllm.openai import (
     create_openai_client,
     create_openai_embeddings_llm,
 )
-from openai import AsyncOpenAI
+from openai import AsyncAzureOpenAI, AsyncOpenAI
 from openai._types import NOT_GIVEN
 from openai.lib.streaming.responses._events import ResponseTextDeltaEvent
 
@@ -56,18 +56,36 @@ class _OpenAIResponsesChatModel:
         config: LanguageModelConfig,
         callbacks: WorkflowCallbacks | None = None,
         cache: PipelineCache | None = None,
+        azure: bool = False,
     ) -> None:
         self.config = config
         self._error_handler = _create_error_handler(callbacks) if callbacks else None
-        client_kwargs: dict[str, Any] = {
-            "api_key": config.api_key,
-            "base_url": config.api_base or NOT_GIVEN,
-            "organization": config.organization or NOT_GIVEN,
-            "timeout": config.request_timeout,
-            "max_retries": config.max_retries,
-        }
-        self._client = AsyncOpenAI(**{k: v for k, v in client_kwargs.items() if v is not NOT_GIVEN})
+        if azure:
+            client_kwargs: dict[str, Any] = {
+                "api_key": config.api_key,
+                "azure_endpoint": config.api_base,
+                "api_version": config.api_version,
+                "timeout": config.request_timeout,
+                "max_retries": config.max_retries,
+            }
+            self._client = AsyncAzureOpenAI(
+                **{k: v for k, v in client_kwargs.items() if v is not None}
+            )
+        else:
+            client_kwargs = {
+                "api_key": config.api_key,
+                "base_url": config.api_base or NOT_GIVEN,
+                "organization": config.organization or NOT_GIVEN,
+                "timeout": config.request_timeout,
+                "max_retries": config.max_retries,
+            }
+            self._client = AsyncOpenAI(
+                **{k: v for k, v in client_kwargs.items() if v is not NOT_GIVEN}
+            )
         self._default_params = get_openai_model_parameters_from_config(config)
+        self._model_identifier = (
+            config.deployment_name if azure and config.deployment_name else config.model
+        )
 
     @staticmethod
     def _normalize_history(history: list | None) -> list[dict[str, str]]:
@@ -144,7 +162,10 @@ class _OpenAIResponsesChatModel:
         normalized_history = self._normalize_history(history)
         input_messages = self._to_response_messages(normalized_history, prompt)
 
-        request_kwargs: dict[str, Any] = {"model": self.config.model, "input": input_messages}
+        request_kwargs: dict[str, Any] = {
+            "model": self._model_identifier,
+            "input": input_messages,
+        }
         request_kwargs.update(params)
         if json_mode:
             request_kwargs["text"] = {"format": {"type": "json_object"}}
@@ -203,7 +224,7 @@ class _OpenAIResponsesChatModel:
         input_messages = self._to_response_messages(normalized_history, prompt)
 
         request_kwargs: dict[str, Any] = {
-            "model": self.config.model,
+            "model": self._model_identifier,
             "input": input_messages,
             "stream": True,
         }
@@ -452,7 +473,7 @@ class OpenAIEmbeddingFNLLM:
 class AzureOpenAIChatFNLLM:
     """An Azure OpenAI Chat LLM provider using the fnllm library."""
 
-    model: FNLLMChatLLM
+    model: FNLLMChatLLM | None
 
     def __init__(
         self,
@@ -462,16 +483,28 @@ class AzureOpenAIChatFNLLM:
         callbacks: WorkflowCallbacks | None = None,
         cache: PipelineCache | None = None,
     ) -> None:
-        model_config = _create_openai_config(config, azure=True)
-        error_handler = _create_error_handler(callbacks) if callbacks else None
-        model_cache = _create_cache(cache, name)
-        client = create_openai_client(model_config)
-        self.model = create_openai_chat_llm(
-            model_config,
-            client=client,
-            cache=model_cache,
-            events=FNLLMEvents(error_handler) if error_handler else None,
-        )
+        self._responses_model: _OpenAIResponsesChatModel | None = None
+
+        if is_responses_model(config.model):
+            self.model = None
+            self._responses_model = _OpenAIResponsesChatModel(
+                name=name,
+                config=config,
+                callbacks=callbacks,
+                cache=cache,
+                azure=True,
+            )
+        else:
+            model_config = _create_openai_config(config, azure=True)
+            error_handler = _create_error_handler(callbacks) if callbacks else None
+            model_cache = _create_cache(cache, name)
+            client = create_openai_client(model_config)
+            self.model = create_openai_chat_llm(
+                model_config,
+                client=client,
+                cache=model_cache,
+                events=FNLLMEvents(error_handler) if error_handler else None,
+            )
         self.config = config
 
     async def achat(
@@ -489,6 +522,9 @@ class AzureOpenAIChatFNLLM:
         -------
             The response from the Model.
         """
+        if self._responses_model is not None:
+            return await self._responses_model.achat(prompt, history=history, **kwargs)
+
         if history is None:
             response = await self.model(prompt, **kwargs)
         else:
@@ -520,6 +556,13 @@ class AzureOpenAIChatFNLLM:
         -------
             A generator that yields strings representing the response.
         """
+        if self._responses_model is not None:
+            async for chunk in self._responses_model.achat_stream(
+                prompt, history=history, **kwargs
+            ):
+                yield chunk
+            return
+
         if history is None:
             response = await self.model(prompt, stream=True, **kwargs)
         else:
