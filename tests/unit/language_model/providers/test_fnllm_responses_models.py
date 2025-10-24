@@ -71,6 +71,32 @@ def test_openai_gpt5_requests_use_responses(
     assert captured_request["input"][-1]["content"][0]["text"] == "hello"
 
 
+def test_openai_gpt5_json_mode_sets_response_format(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured_request: dict[str, Any] = {}
+
+    async_client = _DummyAsyncClient
+
+    monkeypatch.setattr(
+        "graphrag.language_model.providers.fnllm.models.AsyncOpenAI",
+        lambda **kwargs: async_client(captured_request, **kwargs),
+    )
+
+    config = LanguageModelConfig(
+        type=ModelType.OpenAIChat.value,
+        model="gpt-5-nano",
+        api_key="test-key",
+    )
+
+    model = OpenAIChatFNLLM(name="test", config=config)
+
+    response = asyncio.run(model.achat("hello", json=True))
+
+    assert response.output.content == "content"
+    assert captured_request["response_format"] == {"type": "json_object"}
+
+
 def test_azure_gpt5_requests_use_responses(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -102,4 +128,36 @@ def test_azure_gpt5_requests_use_responses(
     assert response.output.content == "content"
     assert captured_request["model"] == "gpt5-deployment"
     assert captured_request["input"][-1]["content"][0]["text"] == "hi"
+
+
+def test_azure_gpt5_json_mode_sets_response_format(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured_request: dict[str, Any] = {}
+
+    class _AzureDummyClient(_DummyAsyncClient):
+        def __init__(self, capture: dict[str, Any], **kwargs: Any) -> None:
+            super().__init__(capture, **kwargs)
+            self.kwargs = kwargs
+
+    monkeypatch.setattr(
+        "graphrag.language_model.providers.fnllm.models.AsyncAzureOpenAI",
+        lambda **kwargs: _AzureDummyClient(captured_request, **kwargs),
+    )
+
+    config = LanguageModelConfig(
+        type=ModelType.AzureOpenAIChat.value,
+        model="gpt-5-nano",
+        deployment_name="gpt5-deployment",
+        api_key="test-key",
+        api_base="https://example.openai.azure.com/",
+        api_version="2024-05-01-preview",
+    )
+
+    model = AzureOpenAIChatFNLLM(name="test", config=config)
+
+    response = asyncio.run(model.achat("hi", json=True))
+
+    assert response.output.content == "content"
+    assert captured_request["response_format"] == {"type": "json_object"}
 
