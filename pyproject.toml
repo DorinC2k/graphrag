@@ -65,6 +65,7 @@ sentence-transformers = "^5.1.0"
 huggingface-hub = "^0.34.4"
 transformers = "^4.48.0"
 torch = "^2.5.1"
+sentencepiece = ">=0.1.91,!=0.1.92"
 
 # Data-Science
 numpy = "^1.25.2"
