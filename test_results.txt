@@ -1,0 +1,52 @@
+Poe => pytest ./tests/unit
+============================= test session starts =============================
+platform win32 -- Python 3.11.7, pytest-8.3.5, pluggy-1.6.0
+rootdir: C:\development\graphrag
+configfile: pyproject.toml
+plugins: anyio-4.9.0, devtools-0.12.2, asyncio-0.24.0, dotenv-0.5.2, timeout-2.4.0
+asyncio: mode=Mode.AUTO, default_loop_scope=function
+timeout: 5000.0s
+timeout method: thread
+timeout func_only: False
+collected 89 items
+
+tests\unit\config\test_config.py .............                           [ 14%]
+tests\unit\config\test_extract_graph_config.py .                         [ 15%]
+tests\unit\config\test_huggingface_config.py .                           [ 16%]
+tests\unit\config\test_text_embedding_config.py .                        [ 17%]
+tests\unit\indexing\cache\test_file_pipeline_cache.py ....               [ 22%]
+tests\unit\indexing\graph\extractors\community_reports\test_sort_context.py . [ 23%]
+.                                                                        [ 24%]
+tests\unit\indexing\graph\utils\test_stable_lcc.py ...                   [ 28%]
+tests\unit\indexing\input\test_csv_loader.py ....                        [ 32%]
+tests\unit\indexing\input\test_json_loader.py .....                      [ 38%]
+tests\unit\indexing\input\test_txt_loader.py ...                         [ 41%]
+tests\unit\indexing\operations\chunk_text\test_chunk_text.py ..........  [ 52%]
+tests\unit\indexing\operations\chunk_text\test_strategies.py .......     [ 60%]
+tests\unit\indexing\operations\extract_covariates\test_mrebel_strategy.py . [ 61%]
+                                                                         [ 61%]
+tests\unit\indexing\operations\extract_graph\test_mrebel_strategy.py ..  [ 64%]
+tests\unit\indexing\operations\summarize_descriptions\test_mrebel_strategy.py . [ 65%]
+                                                                         [ 65%]
+tests\unit\indexing\test_init_content.py ..                              [ 67%]
+tests\unit\indexing\text_splitting\test_text_splitting.py .............  [ 82%]
+tests\unit\indexing\verbs\entities\extraction\strategies\graph_intelligence\test_gi_entity_extraction.py . [ 83%]
+....                                                                     [ 87%]
+tests\unit\query\context_builder\test_entity_extraction.py .             [ 88%]
+tests\unit\query\input\retrieval\test_entities.py ..                     [ 91%]
+tests\unit\test_huggingface_embedding.py .                               [ 92%]
+tests\unit\test_huggingface_remote_endpoint.py ..                        [ 94%]
+tests\unit\test_huggingface_remote_model_factory.py ..                   [ 96%]
+tests\unit\utils\test_embeddings.py ...                                  [100%]
+
+============================== warnings summary ===============================
+tests/unit/indexing/graph/utils/test_stable_lcc.py::TestStableLCC::test_directed_graph_keeps_source_target_intact
+  C:\development\venvs\venv311-7\Lib\site-packages\hyppo\independence\hhg.py:3: DeprecationWarning: Please import `random` from the `scipy.sparse` namespace; the `scipy.sparse.construct` namespace is deprecated and will be removed in SciPy 2.0.0.
+    from scipy.sparse.construct import random
+
+tests/unit/indexing/graph/utils/test_stable_lcc.py::TestStableLCC::test_directed_graph_keeps_source_target_intact
+  C:\development\venvs\venv311-7\Lib\site-packages\numba\core\decorators.py:157: NumbaDeprecationWarning: [1mThe keyword argument 'nopython=False' was supplied. From Numba 0.59.0 the default is True and supplying this argument has no effect.[0m
+    warnings.warn(msg, NumbaDeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 89 passed, 2 warnings in 32.44s =======================

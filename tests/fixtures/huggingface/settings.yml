@@ -4,7 +4,7 @@ models:
     type: ${GRAPHRAG_LLM_TYPE}
     api_key: ${GRAPHRAG_API_KEY}
     api_base: ${GRAPHRAG_API_BASE}
-    api_version: ${GRAPHRAG_API_VERSION}
+    api_version: "2025-01-01-preview"
     deployment_name: ${GRAPHRAG_LLM_DEPLOYMENT_NAME}
     model: ${GRAPHRAG_LLM_MODEL}
     tokens_per_minute: ${GRAPHRAG_LLM_TPM}
@@ -12,16 +12,26 @@ models:
     model_supports_json: true
     concurrent_requests: 50
     async_mode: threaded
+  # default_embedding_model:
+    # type: huggingface_embedding
+    # api_key: &hf_api_key ${HUGGINGFACE_API_TOKEN}
+    # api_base: &hf_api_base ${HUGGINGFACE_API_BASE}
+    # model: &hf_model sentence-transformers/all-MiniLM-L6-v2
+    # encoding_model: cl100k_base
+    # tokens_per_minute: null
+    # requests_per_minute: null
+    # concurrent_requests: 50
+    # async_mode: threaded
   default_embedding_model:
     type: huggingface_embedding
-    api_key: &hf_api_key ${HUGGINGFACE_API_TOKEN}
-    api_base: &hf_api_base ${HUGGINGFACE_API_BASE}
-    model: &hf_model sentence-transformers/all-MiniLM-L6-v2
-    encoding_model: cl100k_base
-    tokens_per_minute: null
-    requests_per_minute: null
+    api_key: ${HUGGINGFACE_API_TOKEN}
+    model: sentence-transformers/all-MiniLM-L6-v2
+    api_base: ${HUGGINGFACE_API_BASE}
+    api_version: "2025-08-07"
     concurrent_requests: 50
     async_mode: threaded
+    retry_strategy: native
+    max_retries: 10    
 
 vector_store:
   default_vector_store:
