@@ -60,6 +60,7 @@ class _OpenAIResponsesChatModel:
     ) -> None:
         self.config = config
         self._error_handler = _create_error_handler(callbacks) if callbacks else None
+        self._use_azure_chat_completions = azure
         if azure:
             client_kwargs: dict[str, Any] = {
                 "api_key": config.api_key,
@@ -131,6 +132,45 @@ class _OpenAIResponsesChatModel:
         return messages
 
     @staticmethod
+    def _to_chat_completion_messages(
+        history: list[dict[str, str]], prompt: str
+    ) -> list[dict[str, Any]]:
+        messages: list[dict[str, Any]] = []
+        for message in history:
+            messages.append(
+                {
+                    "role": message["role"],
+                    "content": message["content"],
+                }
+            )
+        messages.append({"role": "user", "content": prompt})
+        return messages
+
+    @staticmethod
+    def _extract_chat_completion_content(response: Any) -> str:
+        choices = getattr(response, "choices", None)
+        if not choices:
+            return ""
+        first_choice = choices[0]
+        message = getattr(first_choice, "message", None)
+        if message is None:
+            return ""
+        content = getattr(message, "content", "")
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            text_parts: list[str] = []
+            for part in content:
+                if isinstance(part, dict) and "text" in part:
+                    text_parts.append(str(part["text"]))
+                elif hasattr(part, "text"):
+                    text_parts.append(str(getattr(part, "text")))
+                elif isinstance(part, str):
+                    text_parts.append(part)
+            return "".join(text_parts)
+        return str(content or "")
+
+    @staticmethod
     def _build_history(
         history: list[dict[str, str]], prompt: str, assistant_response: str
     ) -> list[dict[str, str]]:
@@ -160,18 +200,36 @@ class _OpenAIResponsesChatModel:
         params = self._merge_parameters(model_parameters, extra_parameters)
 
         normalized_history = self._normalize_history(history)
-        input_messages = self._to_response_messages(normalized_history, prompt)
-
-        request_kwargs: dict[str, Any] = {
-            "model": self._model_identifier,
-            "input": input_messages,
-        }
+        if self._use_azure_chat_completions:
+            input_messages = self._to_chat_completion_messages(
+                normalized_history, prompt
+            )
+            request_kwargs: dict[str, Any] = {
+                "model": self._model_identifier,
+                "messages": input_messages,
+            }
+        else:
+            input_messages = self._to_response_messages(normalized_history, prompt)
+            request_kwargs = {
+                "model": self._model_identifier,
+                "input": input_messages,
+            }
         request_kwargs.update(params)
         if json_mode:
             request_kwargs["response_format"] = {"type": "json_object"}
 
         try:
-            response = await self._client.responses.create(**request_kwargs)
+            if self._use_azure_chat_completions:
+                response = await self._client.chat.completions.create(**request_kwargs)
+                content = self._extract_chat_completion_content(response)
+            else:
+                response = await self._client.responses.create(**request_kwargs)
+                try:
+                    content = response.output_text()
+                except TypeError:  # pragma: no cover - defensive
+                    content = response.output_text  # type: ignore[assignment]
+                if not isinstance(content, str):
+                    content = str(content or "")
         except Exception as error:  # pragma: no cover - defensive
             if self._error_handler is not None:
                 self._error_handler(
@@ -181,12 +239,6 @@ class _OpenAIResponsesChatModel:
                 )
             raise
 
-        try:
-            content = response.output_text()
-        except TypeError:  # pragma: no cover - defensive
-            content = response.output_text  # type: ignore[assignment]
-        if not isinstance(content, str):
-            content = str(content or "")
         parsed_json: Any | None = None
         if json_mode and content:
             try:
@@ -221,24 +273,56 @@ class _OpenAIResponsesChatModel:
         params = self._merge_parameters(model_parameters, extra_parameters)
 
         normalized_history = self._normalize_history(history)
-        input_messages = self._to_response_messages(normalized_history, prompt)
-
-        request_kwargs: dict[str, Any] = {
-            "model": self._model_identifier,
-            "input": input_messages,
-            "stream": True,
-        }
+        if self._use_azure_chat_completions:
+            input_messages = self._to_chat_completion_messages(
+                normalized_history, prompt
+            )
+            request_kwargs: dict[str, Any] = {
+                "model": self._model_identifier,
+                "messages": input_messages,
+                "stream": True,
+            }
+        else:
+            input_messages = self._to_response_messages(normalized_history, prompt)
+            request_kwargs = {
+                "model": self._model_identifier,
+                "input": input_messages,
+                "stream": True,
+            }
         request_kwargs.update(params)
         if json_mode:
             request_kwargs["response_format"] = {"type": "json_object"}
 
-        stream = await self._client.responses.create(**request_kwargs)
-        async with stream:
-            async for event in stream:
-                event_type = getattr(event, "type", "")
-                if event_type == "response.output_text.delta":
-                    if isinstance(event, ResponseTextDeltaEvent):
-                        yield event.delta
+        if self._use_azure_chat_completions:
+            stream = await self._client.chat.completions.create(**request_kwargs)
+            async with stream:
+                async for chunk in stream:
+                    choices = getattr(chunk, "choices", None)
+                    if not choices:
+                        continue
+                    for choice in choices:
+                        delta = getattr(choice, "delta", None)
+                        content = getattr(delta, "content", None)
+                        if not content:
+                            continue
+                        if isinstance(content, str):
+                            yield content
+                        elif isinstance(content, list):
+                            for part in content:
+                                if isinstance(part, dict) and "text" in part:
+                                    yield str(part["text"])
+                                elif hasattr(part, "text"):
+                                    yield str(getattr(part, "text"))
+                                elif isinstance(part, str):
+                                    yield part
+        else:
+            stream = await self._client.responses.create(**request_kwargs)
+            async with stream:
+                async for event in stream:
+                    event_type = getattr(event, "type", "")
+                    if event_type == "response.output_text.delta":
+                        if isinstance(event, ResponseTextDeltaEvent):
+                            yield event.delta
 
 
 class OpenAIChatFNLLM:

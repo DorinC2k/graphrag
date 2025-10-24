@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -41,6 +42,42 @@ class _DummyAsyncClient:
     def __init__(self, capture: dict[str, Any], **kwargs: Any) -> None:
         self.kwargs = kwargs
         self.responses = _DummyResponses(capture)
+
+
+class _DummyChatCompletions:
+    def __init__(self, capture: dict[str, Any]) -> None:
+        self._capture = capture
+
+    async def create(self, **kwargs: Any) -> _DummyChatCompletionResponse:
+        self._capture.clear()
+        self._capture.update(kwargs)
+        return _DummyChatCompletionResponse()
+
+
+class _DummyChat:
+    def __init__(self, capture: dict[str, Any]) -> None:
+        self.completions = _DummyChatCompletions(capture)
+
+
+class _DummyChatCompletionMessage:
+    def __init__(self, content: str) -> None:
+        self.content = content
+
+
+class _DummyChatCompletionChoice:
+    def __init__(self, content: str) -> None:
+        self.delta = SimpleNamespace(content=content)
+        self.message = _DummyChatCompletionMessage(content)
+
+
+class _DummyChatCompletionResponse:
+    def __init__(self, content: str = "content") -> None:
+        self._content = content
+        self.choices = [_DummyChatCompletionChoice(content)]
+        self.usage = None
+
+    def model_dump(self) -> dict[str, Any]:
+        return {"choices": [{"message": {"content": self._content}}]}
 
 
 def test_openai_gpt5_requests_use_responses(
@@ -102,10 +139,10 @@ def test_azure_gpt5_requests_use_responses(
 ) -> None:
     captured_request: dict[str, Any] = {}
 
-    class _AzureDummyClient(_DummyAsyncClient):
+    class _AzureDummyClient:
         def __init__(self, capture: dict[str, Any], **kwargs: Any) -> None:
-            super().__init__(capture, **kwargs)
             self.kwargs = kwargs
+            self.chat = _DummyChat(capture)
 
     monkeypatch.setattr(
         "graphrag.language_model.providers.fnllm.models.AsyncAzureOpenAI",
@@ -127,7 +164,7 @@ def test_azure_gpt5_requests_use_responses(
 
     assert response.output.content == "content"
     assert captured_request["model"] == "gpt5-deployment"
-    assert captured_request["input"][-1]["content"][0]["text"] == "hi"
+    assert captured_request["messages"][-1]["content"] == "hi"
 
 
 def test_azure_gpt5_json_mode_sets_response_format(
@@ -135,10 +172,10 @@ def test_azure_gpt5_json_mode_sets_response_format(
 ) -> None:
     captured_request: dict[str, Any] = {}
 
-    class _AzureDummyClient(_DummyAsyncClient):
+    class _AzureDummyClient:
         def __init__(self, capture: dict[str, Any], **kwargs: Any) -> None:
-            super().__init__(capture, **kwargs)
             self.kwargs = kwargs
+            self.chat = _DummyChat(capture)
 
     monkeypatch.setattr(
         "graphrag.language_model.providers.fnllm.models.AsyncAzureOpenAI",
