@@ -90,8 +90,9 @@ query:
 
 Provide the `api_base` if your embedding model is served through a Hugging Face
 Inference Endpoint by setting `HUGGINGFACE_API_BASE` in your environment.
-The token supplied via `HUGGINGFACE_API_TOKEN` will be sent as a Bearer token
-when calling the endpoint.
+The token supplied via `HUGGINGFACE_API_TOKEN` (or legacy fallbacks such as
+`HUGGINGFACEHUB_API_TOKEN`) will be sent as a Bearer token when calling the
+endpoint.
 
 
 Another option would be to avoid using a language model at all for the graph extraction, instead using the `fast` [indexing method](../index/methods.md) that uses NLP for portions of the indexing phase in lieu of LLM APIs.

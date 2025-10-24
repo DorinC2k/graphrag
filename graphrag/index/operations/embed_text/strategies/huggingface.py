@@ -3,8 +3,9 @@
 
 """Text embedding strategy using HuggingFace sentence-transformers.
 
-Supports the ``HUGGING_FACE_TOKEN_READ_KEY`` and ``HUGGINGFACE_API_TOKEN``
-environment variables for authentication.
+Supports the ``HUGGINGFACE_API_TOKEN`` environment variable for authentication,
+falling back to ``HUGGINGFACEHUB_API_TOKEN`` and ``HUGGING_FACE_TOKEN_READ_KEY``
+for backward compatibility.
 """
 
 from __future__ import annotations
@@ -27,6 +28,22 @@ from graphrag.index.operations.embed_text.strategies.typing import TextEmbedding
 from graphrag.logger.progress import progress_ticker
 
 
+def _as_bearer_token(token: str) -> str:
+    token = token.strip()
+    if token.lower().startswith("bearer "):
+        return token
+    return f"Bearer {token}"
+
+
+def _strip_bearer_token(token: str | None) -> str | None:
+    if token is None:
+        return None
+    value = token.strip()
+    if value.lower().startswith("bearer "):
+        return value[7:].strip()
+    return value
+
+
 async def run(
     input: list[str],
     callbacks: WorkflowCallbacks,
@@ -41,10 +58,11 @@ async def run(
     model_name = model_info.get("model")
     api_base = model_info.get("api_base")
     # API key is sourced from model info or supported environment variables
-    api_key = (
+    api_key = _strip_bearer_token(
         model_info.get("api_key")
-        or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
         or os.getenv("HUGGINGFACE_API_TOKEN")
+        or os.getenv("HUGGINGFACEHUB_API_TOKEN")
+        or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
     )
 
     if api_base:
@@ -56,7 +74,7 @@ async def run(
                 requests.post,
                 api_base,
                 headers={
-                    "Authorization": f"Bearer {api_key}",
+                    "Authorization": _as_bearer_token(api_key),
                     "Accept": "application/json",
                     "Content-Type": "application/json",
                 },

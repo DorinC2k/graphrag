@@ -2,8 +2,9 @@ from __future__ import annotations
 
 """Hugging Face embedding model provider.
 
-Supports the ``HUGGING_FACE_TOKEN_READ_KEY`` and ``HUGGINGFACE_API_TOKEN``
-environment variables for authentication.
+Supports the ``HUGGINGFACE_API_TOKEN`` environment variable for authentication,
+falling back to ``HUGGINGFACEHUB_API_TOKEN`` and ``HUGGING_FACE_TOKEN_READ_KEY``
+for backward compatibility.
 """
 
 from typing import TYPE_CHECKING, Any
@@ -22,6 +23,22 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from graphrag.config.models.language_model_config import LanguageModelConfig
 
 
+def _as_bearer_token(token: str) -> str:
+    token = token.strip()
+    if token.lower().startswith("bearer "):
+        return token
+    return f"Bearer {token}"
+
+
+def _strip_bearer_token(token: str | None) -> str | None:
+    if token is None:
+        return None
+    value = token.strip()
+    if value.lower().startswith("bearer "):
+        return value[7:].strip()
+    return value
+
+
 class HuggingFaceEmbeddingModel:
     """Embedding model backed by a Hugging Face `SentenceTransformer` or remote endpoint."""
 
@@ -38,10 +55,11 @@ class HuggingFaceEmbeddingModel:
         self.config = config
         self.api_base = config.api_base
         # API key is sourced from config or supported environment variables
-        self.api_key = (
+        self.api_key = _strip_bearer_token(
             config.api_key
-            or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
             or os.getenv("HUGGINGFACE_API_TOKEN")
+            or os.getenv("HUGGINGFACEHUB_API_TOKEN")
+            or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
         )
 
         if self.api_base:
@@ -73,7 +91,7 @@ class HuggingFaceEmbeddingModel:
                     "Content-Type": "application/json",
                 }
                 if self.api_key:
-                    headers["Authorization"] = f"Bearer {self.api_key}"
+                    headers["Authorization"] = _as_bearer_token(self.api_key)
                 response = requests.post(
                     self.api_base,
                     headers=headers,
