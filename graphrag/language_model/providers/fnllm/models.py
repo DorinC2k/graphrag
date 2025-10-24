@@ -168,7 +168,7 @@ class _OpenAIResponsesChatModel:
         }
         request_kwargs.update(params)
         if json_mode:
-            request_kwargs["text"] = {"format": {"type": "json_object"}}
+            request_kwargs["response_format"] = {"type": "json_object"}
 
         try:
             response = await self._client.responses.create(**request_kwargs)
@@ -230,7 +230,7 @@ class _OpenAIResponsesChatModel:
         }
         request_kwargs.update(params)
         if json_mode:
-            request_kwargs["text"] = {"format": {"type": "json_object"}}
+            request_kwargs["response_format"] = {"type": "json_object"}
 
         stream = await self._client.responses.create(**request_kwargs)
         async with stream:

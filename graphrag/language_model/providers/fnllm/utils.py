@@ -163,7 +163,9 @@ def get_openai_model_parameters_from_dict(config: dict[str, Any]) -> dict[str, A
         if config.get("response_format"):
             response_format = config["response_format"]
             if isinstance(response_format, ResponseFormatJSONObject):
-                params["text"] = {"format": response_format}
+                params["response_format"] = {"type": "json_object"}
+            else:
+                params["response_format"] = response_format
         return params
 
     params = {
