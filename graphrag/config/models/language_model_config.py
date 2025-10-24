@@ -3,11 +3,13 @@
 
 """Language model configuration."""
 
+import os
 from typing import Literal
 
 import tiktoken
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
+import graphrag.config.defaults as defs
 from graphrag.config.defaults import language_model_defaults
 from graphrag.config.enums import AsyncType, AuthType, ModelType
 from graphrag.config.errors import (
@@ -94,6 +96,28 @@ class LanguageModelConfig(BaseModel):
 
     type: ModelType | str = Field(description="The type of LLM model to use.")
 
+    @field_validator("type", mode="before")
+    @classmethod
+    def _resolve_type(cls, value, info: ValidationInfo):
+        """Resolve model type placeholders or aliases."""
+        if isinstance(value, ModelType):
+            return value
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("${") and stripped.endswith("}"):
+                env_name = stripped[2:-1]
+                env_value = os.getenv(env_name)
+                if env_value:
+                    return env_value
+                if env_name == "GRAPHRAG_LLM_TYPE":
+                    return ModelType.AzureOpenAIChat.value
+                # Heuristic: if Azure specific settings are provided, default to Azure chat
+                data = info.data or {}
+                if data.get("deployment_name") or data.get("azure_auth_type"):
+                    return ModelType.AzureOpenAIChat.value
+                return ModelType.OpenAIChat.value
+        return value
+
     def _validate_type(self) -> None:
         """Validate the model type.
 
@@ -108,6 +132,35 @@ class LanguageModelConfig(BaseModel):
             raise KeyError(msg)
 
     model: str = Field(description="The LLM model to use.")
+
+    @field_validator("model", mode="before")
+    @classmethod
+    def _resolve_model(cls, value, info: ValidationInfo):
+        """Resolve model placeholders."""
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("${") and stripped.endswith("}"):
+                env_name = stripped[2:-1]
+                env_value = os.getenv(env_name)
+                if env_value:
+                    return env_value
+                if env_name == "GRAPHRAG_LLM_MODEL":
+                    return "gpt-4o"
+                data = info.data or {}
+                model_type = data.get("type")
+                if isinstance(model_type, ModelType):
+                    model_type_value = model_type
+                elif isinstance(model_type, str):
+                    try:
+                        model_type_value = ModelType(model_type)
+                    except ValueError:
+                        model_type_value = None
+                else:
+                    model_type_value = None
+                if model_type_value == ModelType.AzureOpenAIChat:
+                    return "gpt-4o"
+                return defs.DEFAULT_CHAT_MODEL
+        return value
     encoding_model: str = Field(
         description="The encoding model to use",
         default=language_model_defaults.encoding_model,
@@ -124,7 +177,37 @@ class LanguageModelConfig(BaseModel):
         if self.encoding_model.strip() == "" and self.type not in (
             ModelType.HuggingFaceEmbedding,
         ):
-            self.encoding_model = tiktoken.encoding_name_for_model(self.model)
+            try:
+                self.encoding_model = tiktoken.encoding_name_for_model(self.model)
+            except KeyError:
+                # Fallback to the default encoding when the model is unknown to
+                # tiktoken. This allows custom or future model names to work
+                # without requiring immediate library updates.
+                self.encoding_model = defs.ENCODING_MODEL
+
+    @field_validator("tokens_per_minute", mode="before")
+    @classmethod
+    def _resolve_tokens_per_minute(cls, value):
+        """Convert environment placeholders to accepted values."""
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped == "":
+                return language_model_defaults.tokens_per_minute
+            if stripped.startswith("${") and stripped.endswith("}"):
+                return language_model_defaults.tokens_per_minute
+        return value
+
+    @field_validator("requests_per_minute", mode="before")
+    @classmethod
+    def _resolve_requests_per_minute(cls, value):
+        """Convert environment placeholders to accepted values."""
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped == "":
+                return language_model_defaults.requests_per_minute
+            if stripped.startswith("${") and stripped.endswith("}"):
+                return language_model_defaults.requests_per_minute
+        return value
 
     api_base: str | None = Field(
         description="The base URL for the LLM API.",
