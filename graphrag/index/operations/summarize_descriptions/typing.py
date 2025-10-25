@@ -44,7 +44,6 @@ class SummarizeStrategyType(str, Enum):
     """SummarizeStrategyType class definition."""
 
     graph_intelligence = "graph_intelligence"
-    huggingface_mrebel = "huggingface_mrebel"
 
     def __repr__(self):
         """Get a string representation."""

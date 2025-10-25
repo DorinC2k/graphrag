@@ -41,7 +41,7 @@ async def extract_graph(
         entity_types = DEFAULT_ENTITY_TYPES
     strategy = strategy or {}
     strategy_exec = _load_strategy(
-        strategy.get("type", ExtractEntityStrategyType.huggingface_mrebel)
+        strategy.get("type", ExtractEntityStrategyType.graph_intelligence)
     )
     strategy_config = {**strategy}
 
@@ -91,13 +91,6 @@ def _load_strategy(strategy_type: ExtractEntityStrategyType) -> EntityExtractStr
             )
 
             return run_graph_intelligence
-        case ExtractEntityStrategyType.huggingface_mrebel:
-            from graphrag.index.operations.extract_graph.mrebel_strategy import (
-                run_huggingface_mrebel,
-            )
-
-            return run_huggingface_mrebel
-
         case _:
             msg = f"Unknown strategy: {strategy_type}"
             raise ValueError(msg)

@@ -2,7 +2,7 @@
 
 The default configuration mode may be configured by using a `settings.yml` or `settings.json` file in the data project root. If a `.env` file is present along with this config file, then it will be loaded, and the environment variables defined therein will be available for token replacements in your configuration document using `${ENV_VAR}` syntax. We initialize with YML by default in `graphrag init` but you may use the equivalent JSON form if preferred.
 
-For a ready-to-use template that highlights the mREBEL graph extraction strategy and a non-OpenAI embedding model, download the [`example-settings.yml`](example-settings.yml) file in this directory.
+For a ready-to-use template that highlights the default chat-based graph extraction workflow and a Hugging Face embedding model, download the [`example-settings.yml`](example-settings.yml) file in this directory.
 
 Many of these config values have defaults. Rather than replicate them here, please refer to the [constants in the code](https://github.com/microsoft/graphrag/blob/main/graphrag/config/defaults.py) directly.
 
@@ -31,19 +31,19 @@ models:
   default_chat_model:
     api_key: ${GRAPHRAG_API_KEY}
     type: openai_chat
-    model: gpt-4o
+    model: gpt-5-nano
     model_supports_json: true
   default_embedding_model:
-    api_key: ${GRAPHRAG_API_KEY}
-    type: openai_embedding
-    model: text-embedding-ada-002
+    api_key: ${HUGGINGFACE_API_TOKEN}
+    type: huggingface_embedding
+    model: sentence-transformers/all-MiniLM-L6-v2
 ```
 
 #### Fields
 
-- `api_key` **str** - The OpenAI API key to use.
+- `api_key` **str** - The API key or token to use.
 - `auth_type` **api_key|managed_identity** - Indicate how you want to authenticate requests.
-- `type` **openai_chat|azure_openai_chat|openai_embedding|azure_openai_embedding|mock_chat|mock_embeddings** - The type of LLM to use.
+- `type` **openai_chat|azure_openai_chat|openai_embedding|azure_openai_embedding|huggingface_embedding|mock_chat|mock_embeddings** - The type of LLM to use.
 - `model` **str** - The model name.
 - `encoding_model` **str** - The text encoding model to use. Default is to use the encoding model aligned with the language model (i.e., it is retrieved from tiktoken if unset).
 - `api_base` **str** - The API base url to use.
@@ -227,7 +227,7 @@ Tune the language model-based graph extraction process.
 - `prompt` **str** - The prompt file to use.
 - `max_length` **int** - The maximum number of output tokens per summarization.
 - `max_input_length` **int** - The maximum number of tokens to collect for summarization (this will limit how many descriptions you send to be summarized for a given entity or relationship).
-- `strategy` **dict** - Optional override for the summarization strategy. Set `type: huggingface_mrebel` to use the Babelscape/mrebel-base model instead of a chat LLM.
+- `strategy` **dict** - Optional override for the summarization strategy. Provide a custom configuration if you have registered an alternative summarization implementation.
 
 ### extract_graph_nlp
 
@@ -281,7 +281,7 @@ These are the settings used for Leiden hierarchical clustering of the graph to c
 - `prompt` **str** - The prompt file to use.
 - `description` **str** - Describes the types of claims we want to extract.
 - `max_gleanings` **int** - The maximum number of gleaning cycles to use.
-- `strategy` **dict** - Optional override for the claim extraction strategy. Set `type: huggingface_mrebel` to use the Babelscape/mrebel-base model instead of a chat LLM.
+- `strategy` **dict** - Optional override for the claim extraction strategy. Supply configuration details for a custom claim extraction implementation if needed.
 
 ### community_reports
 
