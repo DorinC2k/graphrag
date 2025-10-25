@@ -42,6 +42,28 @@ vector_store:
 
 extract_claims:
   enabled: true
+  
+# extract_graph:
+  # # The mREBEL strategy runs locally via Hugging Face, so no chat model is required.
+  # entity_types: [organization, person, geo, event]
+  # max_gleanings: 1
+  # strategy:
+    # type: huggingface_mrebel
+    # model_name: Babelscape/mrebel-base
+    # max_input_length: 512
+    # max_new_tokens: 256
+    # num_beams: 3
+        
+extract_graph:
+  model_id: default_chat_model
+  prompt: "prompts/extract_graph.txt"
+  entity_types: [organization,person,geo,event]
+  max_gleanings: 1
+    strategy:
+    type: graph_intelligence
+    max_input_length: 512
+    max_new_tokens: 256
+    num_beams: 3
 
 community_reports:
   prompt: "prompts/community_report.txt"
