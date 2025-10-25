@@ -89,6 +89,21 @@ class CommunityReportsExtractor:
             )
 
             output = response.parsed_response
+
+            if output is not None and not isinstance(output, CommunityReportResponse):
+                if isinstance(output, BaseModel):
+                    dump_fn = getattr(output, "model_dump", None)
+                    data = dump_fn() if dump_fn is not None else output.dict()
+                else:
+                    data = output
+
+                validate_fn = getattr(
+                    CommunityReportResponse, "model_validate", None
+                )
+                if validate_fn is not None:
+                    output = validate_fn(data)
+                else:
+                    output = CommunityReportResponse.parse_obj(data)
         except Exception as e:
             log.exception("error generating community report")
             self._on_error(e, traceback.format_exc(), None)
