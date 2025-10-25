@@ -54,7 +54,7 @@ async def extract_covariates(
     async def run_strategy(row):
         text = row[column]
         result = await run_extract_claims(
-            input=text,
+            input_text=text,
             entity_types=entity_types,
             resolved_entities_map=resolved_entities_map,
             callbacks=callbacks,
