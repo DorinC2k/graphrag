@@ -4,6 +4,7 @@
 """A module containing 'CommunityReportsResult' and 'CommunityReportsExtractor' models."""
 
 import logging
+import re
 import traceback
 from dataclasses import dataclass
 
@@ -73,10 +74,13 @@ class CommunityReportsExtractor:
         """Call method definition."""
         output = None
         try:
-            prompt = self._extraction_prompt.format(**{
-                INPUT_TEXT_KEY: input_text,
-                MAX_LENGTH_KEY: str(self._max_report_length),
-            })
+            prompt = self._format_prompt(
+                self._extraction_prompt,
+                {
+                    INPUT_TEXT_KEY: input_text,
+                    MAX_LENGTH_KEY: str(self._max_report_length),
+                },
+            )
             response = await self._model.achat(
                 prompt,
                 json=True,  # Leaving this as True to avoid creating new cache entries
@@ -94,6 +98,27 @@ class CommunityReportsExtractor:
             structured_output=output,
             output=text_output,
         )
+
+    def _format_prompt(self, prompt: str, values: dict[str, str]) -> str:
+        """Safely substitute known placeholders in the prompt."""
+
+        if not values:
+            return prompt
+
+        str_values = {key: str(value) for key, value in values.items()}
+
+        pattern = re.compile(
+            "|".join(
+                re.escape("{" + key + "}")
+                for key in str_values
+            )
+        )
+
+        def replace(match: re.Match[str]) -> str:
+            key = match.group(0)[1:-1]
+            return str_values.get(key, match.group(0))
+
+        return pattern.sub(replace, prompt)
 
     def _get_text_output(self, report: CommunityReportResponse) -> str:
         report_sections = "\n\n".join(
