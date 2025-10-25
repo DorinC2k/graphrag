@@ -24,9 +24,9 @@ models:
     # async_mode: threaded
   default_embedding_model:
     type: huggingface_embedding
-    api_key: ${HUGGINGFACE_API_TOKEN}
-    model: sentence-transformers/all-MiniLM-L6-v2
-    api_base: ${HUGGINGFACE_API_BASE}
+    api_key: &hf_api_key ${HUGGINGFACE_API_TOKEN}
+    model: &hf_model sentence-transformers/all-MiniLM-L6-v2
+    api_base: &hf_api_base ${HUGGINGFACE_API_BASE}
     api_version: "2025-08-07"
     concurrent_requests: 50
     async_mode: threaded
@@ -55,9 +55,9 @@ extract_claims:
 extract_graph:
   model_id: default_chat_model
   prompt: "prompts/extract_graph.txt"
-  entity_types: [organization,person,geo,event]
+  entity_types: [organization, person, geo, event]
   max_gleanings: 1
-    strategy:
+  strategy:
     type: graph_intelligence
     max_input_length: 512
     max_new_tokens: 256
