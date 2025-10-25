@@ -43,14 +43,36 @@ class SummarizeDescriptionsConfig(BaseModel):
             SummarizeStrategyType,
         )
 
-        return self.strategy or {
-            "type": SummarizeStrategyType.graph_intelligence,
-            "llm": model_config.model_dump(),
-            "summarize_prompt": (Path(root_dir) / self.prompt).read_text(
+        strategy = dict(self.strategy) if self.strategy else {}
+
+        default_type = SummarizeStrategyType.graph_intelligence
+        strategy_type_raw = strategy.get("type", default_type)
+
+        try:
+            strategy_type = (
+                SummarizeStrategyType(strategy_type_raw)
+                if isinstance(strategy_type_raw, str)
+                else strategy_type_raw
+            )
+        except ValueError:
+            strategy_type = strategy_type_raw
+
+        if isinstance(strategy_type, SummarizeStrategyType):
+            strategy["type"] = strategy_type
+
+        if self.prompt and "summarize_prompt" not in strategy:
+            strategy["summarize_prompt"] = (Path(root_dir) / self.prompt).read_text(
                 encoding="utf-8"
             )
-            if self.prompt
-            else None,
-            "max_summary_length": self.max_length,
-            "max_input_tokens": self.max_input_tokens,
-        }
+
+        if isinstance(strategy_type, SummarizeStrategyType):
+            if strategy_type == default_type:
+                strategy.setdefault("llm", model_config.model_dump())
+        else:
+            if strategy_type_raw == default_type.value:
+                strategy.setdefault("llm", model_config.model_dump())
+
+        strategy.setdefault("max_summary_length", self.max_length)
+        strategy.setdefault("max_input_tokens", self.max_input_tokens)
+
+        return strategy

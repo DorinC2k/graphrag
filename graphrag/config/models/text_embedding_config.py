@@ -44,16 +44,43 @@ class TextEmbeddingConfig(BaseModel):
             TextEmbedStrategyType,
         )
 
-        strategy_type = (
+        strategy = dict(self.strategy) if self.strategy else {}
+
+        default_type = (
             TextEmbedStrategyType.huggingface
             if model_config.type == ModelType.HuggingFaceEmbedding
             else TextEmbedStrategyType.openai
         )
 
-        return self.strategy or {
-            "type": strategy_type,
-            "llm": model_config.model_dump(),
-            "num_threads": model_config.concurrent_requests,
-            "batch_size": self.batch_size,
-            "batch_max_tokens": self.batch_max_tokens,
-        }
+        strategy_type_raw = strategy.get("type", default_type)
+
+        try:
+            strategy_type = (
+                TextEmbedStrategyType(strategy_type_raw)
+                if isinstance(strategy_type_raw, str)
+                else strategy_type_raw
+            )
+        except ValueError:
+            strategy_type = strategy_type_raw
+
+        if isinstance(strategy_type, TextEmbedStrategyType):
+            strategy["type"] = strategy_type
+
+        strategy.setdefault("num_threads", model_config.concurrent_requests)
+        strategy.setdefault("batch_size", self.batch_size)
+        strategy.setdefault("batch_max_tokens", self.batch_max_tokens)
+
+        if isinstance(strategy_type, TextEmbedStrategyType):
+            if strategy_type in (
+                TextEmbedStrategyType.openai,
+                TextEmbedStrategyType.huggingface,
+            ):
+                strategy.setdefault("llm", model_config.model_dump())
+        else:
+            if strategy_type_raw in (
+                TextEmbedStrategyType.openai.value,
+                TextEmbedStrategyType.huggingface.value,
+            ):
+                strategy.setdefault("llm", model_config.model_dump())
+
+        return strategy
