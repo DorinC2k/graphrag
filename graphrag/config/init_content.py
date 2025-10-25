@@ -37,17 +37,17 @@ models:
     tokens_per_minute: {language_model_defaults.tokens_per_minute}              # set to null to disable rate limiting
     requests_per_minute: {language_model_defaults.requests_per_minute}            # set to null to disable rate limiting
   {defs.DEFAULT_EMBEDDING_MODEL_ID}:
-    type: {defs.DEFAULT_EMBEDDING_MODEL_TYPE.value} # or azure_openai_embedding
+    type: {defs.DEFAULT_EMBEDDING_MODEL_TYPE.value} # or openai_embedding / azure_openai_embedding
     # api_base: https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     auth_type: {defs.DEFAULT_EMBEDDING_MODEL_AUTH_TYPE.value} # or azure_managed_identity
-    api_key: ${{GRAPHRAG_API_KEY}}
+    api_key: ${{HUGGINGFACE_API_TOKEN}}
     # audience: "https://cognitiveservices.azure.com/.default"
     # organization: <organization_id>
     model: {defs.DEFAULT_EMBEDDING_MODEL}
     # deployment_name: <azure_model_deployment_name>
     # encoding_model: {defs.ENCODING_MODEL} # automatically set by tiktoken if left undefined
-    model_supports_json: true # recommended if this is available for your model.
+    # model_supports_json: true
     concurrent_requests: {language_model_defaults.concurrent_requests} # max number of simultaneous LLM requests allowed
     async_mode: {language_model_defaults.async_mode.value} # or asyncio
     retry_strategy: native

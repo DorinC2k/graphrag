@@ -31,8 +31,8 @@ DEFAULT_CHAT_MODEL_TYPE = ModelType.OpenAIChat
 DEFAULT_CHAT_MODEL = "gpt-5-nano"
 DEFAULT_CHAT_MODEL_AUTH_TYPE = AuthType.APIKey
 DEFAULT_EMBEDDING_MODEL_ID = "default_embedding_model"
-DEFAULT_EMBEDDING_MODEL_TYPE = ModelType.OpenAIEmbedding
-DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
+DEFAULT_EMBEDDING_MODEL_TYPE = ModelType.HuggingFaceEmbedding
+DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 DEFAULT_EMBEDDING_MODEL_AUTH_TYPE = AuthType.APIKey
 DEFAULT_VECTOR_STORE_ID = "default_vector_store"
 
@@ -144,7 +144,7 @@ class EmbedGraphDefaults:
 class EmbedTextDefaults:
     """Default values for embedding text."""
 
-    model: str = "text-embedding-3-small"
+    model: str = "sentence-transformers/all-MiniLM-L6-v2"
     batch_size: int = 16
     batch_max_tokens: int = 8191
     model_id: str = DEFAULT_EMBEDDING_MODEL_ID

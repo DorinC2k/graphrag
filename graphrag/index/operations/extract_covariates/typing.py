@@ -54,7 +54,6 @@ class ClaimExtractionStrategyType(str, Enum):
     """Strategy types for claim extraction."""
 
     graph_intelligence = "graph_intelligence"
-    huggingface_mrebel = "huggingface_mrebel"
 
     def __repr__(self) -> str:
         return f'"{self.value}"'

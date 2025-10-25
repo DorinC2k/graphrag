@@ -48,15 +48,14 @@ class ExtractGraphConfig(BaseModel):
             return self.strategy
 
         default_strategy: dict[str, Any] = {
-            "type": ExtractEntityStrategyType.huggingface_mrebel,
+            "type": ExtractEntityStrategyType.graph_intelligence,
             "max_gleanings": self.max_gleanings,
+            "llm": model_config.model_dump(),
         }
 
-        # Retain compatibility with existing configs that provide a prompt even
-        # though the mREBEL strategy does not currently consume it.
         if self.prompt:
-            default_strategy["prompt"] = (Path(root_dir) / self.prompt).read_text(
-                encoding="utf-8"
-            )
+            default_strategy["extraction_prompt"] = (
+                Path(root_dir) / self.prompt
+            ).read_text(encoding="utf-8")
 
         return default_strategy

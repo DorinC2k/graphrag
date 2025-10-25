@@ -118,12 +118,6 @@ def load_claim_extraction_strategy(
     match strategy_type:
         case ClaimExtractionStrategyType.graph_intelligence:
             return _run_graph_intelligence_claims
-        case ClaimExtractionStrategyType.huggingface_mrebel:
-            from graphrag.index.operations.extract_covariates.mrebel_strategy import (
-                run_huggingface_mrebel_claims,
-            )
-
-            return run_huggingface_mrebel_claims
         case _:
             msg = f"Unknown claim extraction strategy: {strategy_type}"
             raise ValueError(msg)

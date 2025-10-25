@@ -115,12 +115,6 @@ def load_strategy(strategy_type: SummarizeStrategyType) -> SummarizationStrategy
             )
 
             return run_graph_intelligence
-        case SummarizeStrategyType.huggingface_mrebel:
-            from graphrag.index.operations.summarize_descriptions.mrebel_strategy import (
-                run_huggingface_mrebel_summarization,
-            )
-
-            return run_huggingface_mrebel_summarization
         case _:
             msg = f"Unknown strategy: {strategy_type}"
             raise ValueError(msg)

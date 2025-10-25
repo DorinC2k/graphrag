@@ -50,8 +50,6 @@ input:
   # entity_types: [organization, person, geo, event]
   # max_gleanings: 1
   # strategy:
-    # type: huggingface_mrebel
-    # model_name: Babelscape/mrebel-base
     # max_input_length: 512
     # max_new_tokens: 256
     # num_beams: 3
