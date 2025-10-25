@@ -59,7 +59,7 @@ extract_graph:
   prompt: "prompts/extract_graph.txt"
   entity_types: [organization,person,geo,event]
   max_gleanings: 1
-    strategy:
+  strategy:
     type: graph_intelligence
     max_input_length: 512
     max_new_tokens: 256
