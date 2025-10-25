@@ -47,14 +47,36 @@ class ClaimExtractionConfig(BaseModel):
             ClaimExtractionStrategyType,
         )
 
-        return self.strategy or {
-            "type": ClaimExtractionStrategyType.graph_intelligence,
-            "llm": model_config.model_dump(),
-            "extraction_prompt": (Path(root_dir) / self.prompt).read_text(
+        strategy = dict(self.strategy) if self.strategy else {}
+
+        default_type = ClaimExtractionStrategyType.graph_intelligence
+        strategy_type_raw = strategy.get("type", default_type)
+
+        try:
+            strategy_type = (
+                ClaimExtractionStrategyType(strategy_type_raw)
+                if isinstance(strategy_type_raw, str)
+                else strategy_type_raw
+            )
+        except ValueError:
+            strategy_type = strategy_type_raw
+
+        if isinstance(strategy_type, ClaimExtractionStrategyType):
+            strategy["type"] = strategy_type
+
+        if self.prompt and "extraction_prompt" not in strategy:
+            strategy["extraction_prompt"] = (Path(root_dir) / self.prompt).read_text(
                 encoding="utf-8"
             )
-            if self.prompt
-            else None,
-            "claim_description": self.description,
-            "max_gleanings": self.max_gleanings,
-        }
+
+        strategy.setdefault("claim_description", self.description)
+        strategy.setdefault("max_gleanings", self.max_gleanings)
+
+        if isinstance(strategy_type, ClaimExtractionStrategyType):
+            if strategy_type == default_type:
+                strategy.setdefault("llm", model_config.model_dump())
+        else:
+            if strategy_type_raw == default_type.value:
+                strategy.setdefault("llm", model_config.model_dump())
+
+        return strategy

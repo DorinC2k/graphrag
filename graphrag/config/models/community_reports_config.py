@@ -47,19 +47,41 @@ class CommunityReportsConfig(BaseModel):
             CreateCommunityReportsStrategyType,
         )
 
-        return self.strategy or {
-            "type": CreateCommunityReportsStrategyType.graph_intelligence,
-            "llm": model_config.model_dump(),
-            "graph_prompt": (Path(root_dir) / self.graph_prompt).read_text(
+        strategy = dict(self.strategy) if self.strategy else {}
+
+        default_type = CreateCommunityReportsStrategyType.graph_intelligence
+        strategy_type_raw = strategy.get("type", default_type)
+
+        try:
+            strategy_type = (
+                CreateCommunityReportsStrategyType(strategy_type_raw)
+                if isinstance(strategy_type_raw, str)
+                else strategy_type_raw
+            )
+        except ValueError:
+            strategy_type = strategy_type_raw
+
+        if isinstance(strategy_type, CreateCommunityReportsStrategyType):
+            strategy["type"] = strategy_type
+
+        if self.graph_prompt and "graph_prompt" not in strategy:
+            strategy["graph_prompt"] = (Path(root_dir) / self.graph_prompt).read_text(
                 encoding="utf-8"
             )
-            if self.graph_prompt
-            else None,
-            "text_prompt": (Path(root_dir) / self.text_prompt).read_text(
+
+        if self.text_prompt and "text_prompt" not in strategy:
+            strategy["text_prompt"] = (Path(root_dir) / self.text_prompt).read_text(
                 encoding="utf-8"
             )
-            if self.text_prompt
-            else None,
-            "max_report_length": self.max_length,
-            "max_input_length": self.max_input_length,
-        }
+
+        if isinstance(strategy_type, CreateCommunityReportsStrategyType):
+            if strategy_type == default_type:
+                strategy.setdefault("llm", model_config.model_dump())
+        else:
+            if strategy_type_raw == default_type.value:
+                strategy.setdefault("llm", model_config.model_dump())
+
+        strategy.setdefault("max_report_length", self.max_length)
+        strategy.setdefault("max_input_length", self.max_input_length)
+
+        return strategy

@@ -44,18 +44,35 @@ class ExtractGraphConfig(BaseModel):
             ExtractEntityStrategyType,
         )
 
-        if self.strategy:
-            return self.strategy
+        strategy: dict[str, Any] = dict(self.strategy) if self.strategy else {}
 
-        default_strategy: dict[str, Any] = {
-            "type": ExtractEntityStrategyType.graph_intelligence,
-            "max_gleanings": self.max_gleanings,
-            "llm": model_config.model_dump(),
-        }
+        default_type = ExtractEntityStrategyType.graph_intelligence
+        strategy_type_raw = strategy.get("type", default_type)
 
-        if self.prompt:
-            default_strategy["extraction_prompt"] = (
-                Path(root_dir) / self.prompt
-            ).read_text(encoding="utf-8")
+        try:
+            strategy_type = (
+                ExtractEntityStrategyType(strategy_type_raw)
+                if isinstance(strategy_type_raw, str)
+                else strategy_type_raw
+            )
+        except ValueError:
+            strategy_type = strategy_type_raw
 
-        return default_strategy
+        if isinstance(strategy_type, ExtractEntityStrategyType):
+            strategy["type"] = strategy_type
+
+        if self.prompt and "extraction_prompt" not in strategy:
+            strategy["extraction_prompt"] = (Path(root_dir) / self.prompt).read_text(
+                encoding="utf-8"
+            )
+
+        if isinstance(strategy_type, ExtractEntityStrategyType):
+            if strategy_type == default_type:
+                strategy.setdefault("max_gleanings", self.max_gleanings)
+                strategy.setdefault("llm", model_config.model_dump())
+        else:
+            if strategy_type_raw == default_type.value:
+                strategy.setdefault("max_gleanings", self.max_gleanings)
+                strategy.setdefault("llm", model_config.model_dump())
+
+        return strategy
