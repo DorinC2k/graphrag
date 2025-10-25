@@ -47,7 +47,7 @@ class CommunityReportsConfig(BaseModel):
             CreateCommunityReportsStrategyType,
         )
 
-        return self.strategy or {
+        default_strategy = {
             "type": CreateCommunityReportsStrategyType.graph_intelligence,
             "llm": model_config.model_dump(),
             "graph_prompt": (Path(root_dir) / self.graph_prompt).read_text(
@@ -63,3 +63,10 @@ class CommunityReportsConfig(BaseModel):
             "max_report_length": self.max_length,
             "max_input_length": self.max_input_length,
         }
+
+        if not self.strategy:
+            return default_strategy
+
+        merged_strategy = {**default_strategy, **self.strategy}
+
+        return merged_strategy

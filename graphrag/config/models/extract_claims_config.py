@@ -47,7 +47,7 @@ class ClaimExtractionConfig(BaseModel):
             ClaimExtractionStrategyType,
         )
 
-        return self.strategy or {
+        default_strategy = {
             "type": ClaimExtractionStrategyType.graph_intelligence,
             "llm": model_config.model_dump(),
             "extraction_prompt": (Path(root_dir) / self.prompt).read_text(
@@ -58,3 +58,10 @@ class ClaimExtractionConfig(BaseModel):
             "claim_description": self.description,
             "max_gleanings": self.max_gleanings,
         }
+
+        if not self.strategy:
+            return default_strategy
+
+        merged_strategy = {**default_strategy, **self.strategy}
+
+        return merged_strategy

@@ -19,3 +19,23 @@ def test_resolved_strategy_defaults_to_graph_intelligence() -> None:
 
     assert strategy["type"] == ExtractEntityStrategyType.graph_intelligence
     assert strategy["llm"]["model"] == model_config.model
+
+
+def test_resolved_strategy_merges_custom_overrides() -> None:
+    config = create_graphrag_config(
+        {
+            "models": DEFAULT_MODEL_CONFIG,
+            "extract_graph": {
+                "strategy": {
+                    "type": ExtractEntityStrategyType.graph_intelligence,
+                    "max_input_length": 512,
+                }
+            },
+        }
+    )
+    model_config = config.get_language_model_config(config.extract_graph.model_id)
+
+    strategy = config.extract_graph.resolved_strategy(config.root_dir, model_config)
+
+    assert strategy["llm"]["model"] == model_config.model
+    assert strategy["max_input_length"] == 512

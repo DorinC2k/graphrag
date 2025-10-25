@@ -43,7 +43,7 @@ class SummarizeDescriptionsConfig(BaseModel):
             SummarizeStrategyType,
         )
 
-        return self.strategy or {
+        default_strategy = {
             "type": SummarizeStrategyType.graph_intelligence,
             "llm": model_config.model_dump(),
             "summarize_prompt": (Path(root_dir) / self.prompt).read_text(
@@ -54,3 +54,10 @@ class SummarizeDescriptionsConfig(BaseModel):
             "max_summary_length": self.max_length,
             "max_input_tokens": self.max_input_tokens,
         }
+
+        if not self.strategy:
+            return default_strategy
+
+        merged_strategy = {**default_strategy, **self.strategy}
+
+        return merged_strategy

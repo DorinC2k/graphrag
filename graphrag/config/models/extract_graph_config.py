@@ -44,9 +44,6 @@ class ExtractGraphConfig(BaseModel):
             ExtractEntityStrategyType,
         )
 
-        if self.strategy:
-            return self.strategy
-
         default_strategy: dict[str, Any] = {
             "type": ExtractEntityStrategyType.graph_intelligence,
             "max_gleanings": self.max_gleanings,
@@ -58,4 +55,9 @@ class ExtractGraphConfig(BaseModel):
                 Path(root_dir) / self.prompt
             ).read_text(encoding="utf-8")
 
-        return default_strategy
+        if not self.strategy:
+            return default_strategy
+
+        merged_strategy = {**default_strategy, **self.strategy}
+
+        return merged_strategy
