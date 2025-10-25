@@ -1,52 +1,487 @@
-Poe => pytest ./tests/unit
-============================= test session starts =============================
-platform win32 -- Python 3.11.7, pytest-8.3.5, pluggy-1.6.0
-rootdir: C:\development\graphrag
-configfile: pyproject.toml
-plugins: anyio-4.9.0, devtools-0.12.2, asyncio-0.24.0, dotenv-0.5.2, timeout-2.4.0
-asyncio: mode=Mode.AUTO, default_loop_scope=function
-timeout: 5000.0s
-timeout method: thread
-timeout func_only: False
-collected 89 items
+GraphRAG Indexer SUCCESS: create_final_documents
 
-tests\unit\config\test_config.py .............                           [ 14%]
-tests\unit\config\test_extract_graph_config.py .                         [ 15%]
-tests\unit\config\test_huggingface_config.py .                           [ 16%]
-tests\unit\config\test_text_embedding_config.py .                        [ 17%]
-tests\unit\indexing\cache\test_file_pipeline_cache.py ....               [ 22%]
-tests\unit\indexing\graph\extractors\community_reports\test_sort_context.py . [ 23%]
-.                                                                        [ 24%]
-tests\unit\indexing\graph\utils\test_stable_lcc.py ...                   [ 28%]
-tests\unit\indexing\input\test_csv_loader.py ....                        [ 32%]
-tests\unit\indexing\input\test_json_loader.py .....                      [ 38%]
-tests\unit\indexing\input\test_txt_loader.py ...                         [ 41%]
-tests\unit\indexing\operations\chunk_text\test_chunk_text.py ..........  [ 52%]
-tests\unit\indexing\operations\chunk_text\test_strategies.py .......     [ 60%]
-tests\unit\indexing\operations\extract_covariates\test_mrebel_strategy.py . [ 61%]
-                                                                         [ 61%]
-tests\unit\indexing\operations\extract_graph\test_mrebel_strategy.py ..  [ 64%]
-tests\unit\indexing\operations\summarize_descriptions\test_mrebel_strategy.py . [ 65%]
-                                                                         [ 65%]
-tests\unit\indexing\test_init_content.py ..                              [ 67%]
-tests\unit\indexing\text_splitting\test_text_splitting.py .............  [ 82%]
-tests\unit\indexing\verbs\entities\extraction\strategies\graph_intelligence\test_gi_entity_extraction.py . [ 83%]
-....                                                                     [ 87%]
-tests\unit\query\context_builder\test_entity_extraction.py .             [ 88%]
-tests\unit\query\input\retrieval\test_entities.py ..                     [ 91%]
-tests\unit\test_huggingface_embedding.py .                               [ 92%]
-tests\unit\test_huggingface_remote_endpoint.py ..                        [ 94%]
-tests\unit\test_huggingface_remote_model_factory.py ..                   [ 96%]
-tests\unit\utils\test_embeddings.py ...                                  [100%]
+GraphRAG Indexer INFO:                                                   id  ...  metadata
+0  09f738d0652902b130c5fd16bc51ba35c1f99028daa7bd...  ...       NaN
+1  4542f220c32c13a2fdf7211ee392489e23ea0b1a68a87e...  ...       NaN
 
-============================== warnings summary ===============================
-tests/unit/indexing/graph/utils/test_stable_lcc.py::TestStableLCC::test_directed_graph_keeps_source_target_intact
-  C:\development\venvs\venv311-7\Lib\site-packages\hyppo\independence\hhg.py:3: DeprecationWarning: Please import `random` from the `scipy.sparse` namespace; the `scipy.sparse.construct` namespace is deprecated and will be removed in SciPy 2.0.0.
-    from scipy.sparse.construct import random
+[2 rows x 7 columns]
 
-tests/unit/indexing/graph/utils/test_stable_lcc.py::TestStableLCC::test_directed_graph_keeps_source_target_intact
-  C:\development\venvs\venv311-7\Lib\site-packages\numba\core\decorators.py:157: NumbaDeprecationWarning: [1mThe keyword argument 'nopython=False' was supplied. From Numba 0.59.0 the default is True and supplying this argument has no effect.[0m
-    warnings.warn(msg, NumbaDeprecationWarning)
+extract_graph
+extract_graph.......................................................................................................................................................................................................................................................
+GraphRAG Indexer SUCCESS: extract_graph
+----------------------------------------------------------------- Captured stderr call ----------------------------------------------------------------- +--------------------- Traceback (most recent call last) ---------------------+
+| C:\development\graphrag\graphrag\cli\main.py:199 in _index_cli              |
+|                                                                             |
+|   196     """Build a knowledge graph index."""                              |
+|   197     from graphrag.cli.index import index_cli                          |
+|   198                                                                       |
+| > 199     index_cli(                                                        |
+|   200         root_dir=root,                                                |
+|   201         verbose=verbose,                                              |
+|   202         memprofile=memprofile,                                        |
+|                                                                             |
 
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================= 89 passed, 2 warnings in 32.44s =======================
+| |                   )                                                     | |
+| | config_filepath = None                                                  | |
+| |         dry_run = False                                                 | |
+| |          logger = <LoggerType.PRINT: 'print'>                           | |
+| |      memprofile = False                                                 | |
+| |          method = <IndexingMethod.Standard: 'standard'>                 | |
+| |      output_dir = None                                                  | |
+| |        root_dir = WindowsPath('C:/development/graphrag/tests/fixtures/� | |
+| | skip_validation = False                                                 | |
+| |         verbose = True                                                  | |
+| +-------------------------------------------------------------------------+ |
+|                                                                             |
+| C:\development\graphrag\graphrag\cli\index.py:170 in _run_index             |
+|                                                                             |
+|   167                                                                       |
+|   168     _register_signal_handlers(progress_logger)                        |
+|   169                                                                       |
+| > 170     outputs = asyncio.run(                                            |
+|   171         api.build_index(                                              |
+|   172             config=config,                                            |
+|   173             method=method,                                            |
+|                                                                             |
+
+| |                   )                                                     | |
+| |         dry_run = False                                                 | |
+| | enabled_logging = True                                                  | |
+| |   is_update_run = False                                                 | |
+| |        log_path = 'C:\\development\\graphrag\\tests\\fixtures\\text\\l� | |
+| |          logger = <LoggerType.PRINT: 'print'>                           | |
+| |      memprofile = False                                                 | |
+| |          method = <IndexingMethod.Standard: 'standard'>                 | |
+| | progress_logger = <graphrag.logger.print_progress.PrintProgressLogger   | |
+| |                   object at 0x000001714F0CD510>                         | |
+| | skip_validation = False                                                 | |
+| |         verbose = True                                                  | |
+| +-------------------------------------------------------------------------+ |
+|                                                                             |
+| C:\Users\dorin\.pyenv\pyenv-win\versions\3.11.7\Lib\asyncio\runners.py:190  |
+| in run                                                                      |
+|                                                                             |
+|   187             "asyncio.run() cannot be called from a running event loop |
+|   188                                                                       |
+|   189     with Runner(debug=debug) as runner:                               |
+| > 190         return runner.run(main)                                       |
+|   191                                                                       |
+|   192                                                                       |
+|   193 def _cancel_all_tasks(loop):                                          |
+|                                                                             |
+| +---------------------------- locals ----------------------------+          |
+| |  debug = None                                                  |          |
+| |   main = <coroutine object build_index at 0x00000171507CD440>  |          |
+| | runner = <asyncio.runners.Runner object at 0x000001714F4626D0> |          |
+| +----------------------------------------------------------------+          |
+|                                                                             |
+| C:\Users\dorin\.pyenv\pyenv-win\versions\3.11.7\Lib\asyncio\runners.py:118  |
+| in run                                                                      |
+|                                                                             |
+|   115                                                                       |
+|   116         self._interrupt_count = 0                                     |
+|   117         try:                                                          |
+| > 118             return self._loop.run_until_complete(task)                |
+|   119         except exceptions.CancelledError:                             |
+|   120             if self._interrupt_count > 0:                             |
+|   121                 uncancel = getattr(task, "uncancel", None)            |
+|                                                                             |
+| +-------------------------------- locals ---------------------------------+ |
+| |        context = <_contextvars.Context object at 0x000001714EB16900>    | |
+| |           coro = <coroutine object build_index at 0x00000171507CD440>   | |
+| |           self = <asyncio.runners.Runner object at 0x000001714F4626D0>  | |
+| | sigint_handler = None                                                   | |
+| |           task = <Task finished name='Task-8' coro=<build_index() done, | |
+| |                  defined at                                             | |
+| |                  C:\development\graphrag\graphrag\api\index.py:28>      | |
+| |                  exception=UnicodeEncodeError('charmap', "\r\nGraphRAG  | |
+| |                  Indexer INFO: {'entities':                             | |
+| |                  title  ...                                             | |
+| |                  description\r\n0                                       | |
+| |                  MOLDTRANS - TUR  ...  MoldTrans - Tur is a Moldovan    | |
+| |                  limited liabilit...\r\n1                     AUTOGARA  | |
+| |                  INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...  Autogara Interna\u021bional\u0103  | |
+| |                  Chi\u0219in\u0103u is a Moldovan...\r\n2                         | |
+| |                  PRIM\u0102RIA MUNICIPIULUI CHI\u0218IN\u0102U  ...  PRIM\u0102RIA          | |
+| |                  MUNICIPIULUI CHI\u0218IN\u0102U (Chi\u0219in\u0103u City ...\r\n3          | |
+| |                  CONSILIUL MUNICIPAL CHI\u0218IN\u0102U  ...  CONSILIUL MUNICIPAL | |
+| |                  CHI\u0218IN\u0102U, also referred to...\r\n4    ASOCIA\u021aIA DE     | |
+| |                  COPROPRIETARI �N CONDOMINIU NR. 5...  ...  ASOCIA\u021aIA   | |
+| |                  DE COPROPRIETARI �N CONDOMINIU NR. 5...\r\n..          | |
+| |                  ...  ...                                               | |
+| |                  ...\r\n119                                   STELLA    | |
+| |                  BLE\u0218CEAGA  ...                                         | |
+| |                  \r\n120                                   STELLA       | |
+| |                  BLE\u0218CEAGA  ...  Stella Ble\u0219ceaga is the President      | |
+| |                  (Pre\u0219edinte)...\r\n121                                 | |
+| |                  VLADISLAV GRIBINCEA  ...                               | |
+| |                  \r\n122                                VLADISLAV       | |
+| |                  GRIBINCEA  ...  Vladislav Gribincea is a judge         | |
+| |                  (Judec\u0103tor) on ...\r\n123                              | |
+| |                  DESERVIRE SRL V MOLDOVA  ...                           | |
+| |                  \r\n\r\n[124 rows x 5 columns], 'relationships':       | |
+| |                  source  ...                                            | |
+| |                  description\r\n0                     MOLDTRANS - TUR   | |
+| |                  ...  MoldTrans - Tur filed a court claim against       | |
+| |                  th...\r\n1                     MOLDTRANS - TUR  ...    | |
+| |                  MoldTrans - Tur filed a court claim against th...\r\n2 | |
+| |                  AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...  Autogara        | |
+| |                  Interna\u021bional\u0103 Chi\u0219in\u0103u filed a court...\r\n3          | |
+| |                  AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...  Autogara        | |
+| |                  Interna\u021bional\u0103 Chi\u0219in\u0103u is involved i...\r\n4          | |
+| |                  AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...  Autogara        | |
+| |                  Interna\u021bional\u0103 Chi\u0219in\u0103u's action is a...\r\n..         | |
+| |                  ...  ...                                               | |
+| |                  ...\r\n124        CURTEA SUPREM\u0102 DE JUSTI\u021aIE  ...  The | |
+| |                  Metropolitanate of Basarabia filed a reque...\r\n125   | |
+| |                  DESERVIRE SRL  ...  CtEDO is the court that heard the  | |
+| |                  Deservire SR...\r\n126                     DESERVIRE   | |
+| |                  SRL  ...  Moldova is the respondent in the Deservire   | |
+| |                  SRL...\r\n127                             CTEDO  ...   | |
+| |                  Moldova is the defendant in the Deservire SRL          | |
+| |                  ...\r\n128                             CTEDO  ...      | |
+| |                  This case is heard by CtEDO, the European              | |
+| |                  Cour...\r\n\r\n[129 rows x 5 columns]}", 300, 301,     | |
+| |                  'character maps to <undefined>')>                      | |
+| +-------------------------------------------------------------------------+ |
+|                                                                             |
+| C:\Users\dorin\.pyenv\pyenv-win\versions\3.11.7\Lib\asyncio\base_events.py: |
+| 653 in run_until_complete                                                   |
+|                                                                             |
+|    650         if not future.done():                                        |
+|    651             raise RuntimeError('Event loop stopped before Future com |
+|    652                                                                      |
+| >  653         return future.result()                                       |
+|    654                                                                      |
+|    655     def stop(self):                                                  |
+|    656         """Stop running the event loop.                              |
+|                                                                             |
+| +-------------------------------- locals ---------------------------------+ |
+| |   future = <Task finished name='Task-8' coro=<build_index() done,       | |
+| |            defined at C:\development\graphrag\graphrag\api\index.py:28> | |
+| |            exception=UnicodeEncodeError('charmap', "\r\nGraphRAG        | |
+| |            Indexer INFO: {'entities':                                   | |
+| |            title  ...                                                   | |
+| |            description\r\n0                                             | |
+| |            MOLDTRANS - TUR  ...  MoldTrans - Tur is a Moldovan limited  | |
+| |            liabilit...\r\n1                     AUTOGARA INTERNA\u021aIONAL\u0102 | |
+| |            CHI\u0218IN\u0102U  ...  Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u is a         | |
+| |            Moldovan...\r\n2                       PRIM\u0102RIA MUNICIPIULUI | |
+| |            CHI\u0218IN\u0102U  ...  PRIM\u0102RIA MUNICIPIULUI CHI\u0218IN\u0102U (Chi\u0219in\u0103u City | |
+| |            ...\r\n3                         CONSILIUL MUNICIPAL         | |
+| |            CHI\u0218IN\u0102U  ...  CONSILIUL MUNICIPAL CHI\u0218IN\u0102U, also referred   | |
+| |            to...\r\n4    ASOCIA\u021aIA DE COPROPRIETARI �N CONDOMINIU NR.   | |
+| |            5...  ...  ASOCIA\u021aIA DE COPROPRIETARI �N CONDOMINIU NR.      | |
+| |            5...\r\n..                                                   | |
+| |            ...  ...                                                     | |
+| |            ...\r\n119                                   STELLA          | |
+| |            BLE\u0218CEAGA  ...                                               | |
+| |            \r\n120                                   STELLA BLE\u0218CEAGA   | |
+| |            ...  Stella Ble\u0219ceaga is the President                       | |
+| |            (Pre\u0219edinte)...\r\n121                                       | |
+| |            VLADISLAV GRIBINCEA  ...                                     | |
+| |            \r\n122                                VLADISLAV GRIBINCEA   | |
+| |            ...  Vladislav Gribincea is a judge (Judec\u0103tor) on           | |
+| |            ...\r\n123                            DESERVIRE SRL V        | |
+| |            MOLDOVA  ...                                                 | |
+| |            \r\n\r\n[124 rows x 5 columns], 'relationships':             | |
+| |            source  ...                                                  | |
+| |            description\r\n0                     MOLDTRANS - TUR  ...    | |
+| |            MoldTrans - Tur filed a court claim against th...\r\n1       | |
+| |            MOLDTRANS - TUR  ...  MoldTrans - Tur filed a court claim    | |
+| |            against th...\r\n2    AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...  | |
+| |            Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u filed a court...\r\n3       | |
+| |            AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...  Autogara              | |
+| |            Interna\u021bional\u0103 Chi\u0219in\u0103u is involved i...\r\n4    AUTOGARA    | |
+| |            INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...  Autogara Interna\u021bional\u0103        | |
+| |            Chi\u0219in\u0103u's action is a...\r\n..                              | |
+| |            ...  ...                                                     | |
+| |            ...\r\n124        CURTEA SUPREM\u0102 DE JUSTI\u021aIE  ...  The       | |
+| |            Metropolitanate of Basarabia filed a reque...\r\n125         | |
+| |            DESERVIRE SRL  ...  CtEDO is the court that heard the        | |
+| |            Deservire SR...\r\n126                     DESERVIRE SRL     | |
+| |            ...  Moldova is the respondent in the Deservire              | |
+| |            SRL...\r\n127                             CTEDO  ...         | |
+| |            Moldova is the defendant in the Deservire SRL ...\r\n128     | |
+| |            CTEDO  ...  This case is heard by CtEDO, the European        | |
+| |            Cour...\r\n\r\n[129 rows x 5 columns]}", 300, 301,           | |
+| |            'character maps to <undefined>')>                            | |
+| | new_task = False                                                        | |
+| |     self = <ProactorEventLoop running=False closed=True debug=False>    | |
+| +-------------------------------------------------------------------------+ |
+|                                                                             |
+| C:\development\graphrag\graphrag\api\index.py:86 in build_index             |
+|                                                                             |
+|    83             logger.error(output.workflow)                             |
+|    84         else:                                                         |
+|    85             logger.success(output.workflow)                           |
+| >  86         logger.info(str(output.result))                               |
+|    87                                                                       |
+|    88     workflow_callbacks.pipeline_end(outputs)                          |
+|    89     return outputs                                                    |
+|                                                                             |
+|
+| |                          )                                              | |
+| |                      )                                                  | |
+| |      is_update_run = False                                              | |
+| |             logger = <graphrag.logger.print_progress.PrintProgressLogg� | |
+| |                      object at 0x000001714F0CD510>                      | |
+| |     memory_profile = False                                              | |
+| |             method = 'standard'                                         | |
+| |             output = PipelineRunResult(                                 | |
+| |                          workflow='extract_graph',                      | |
+| |                          result={                                       | |
+| |                              'entities':                                | |
+| |                      title  ...                                         | |
+| |                      description                                        | |
+| |                      0                                      MOLDTRANS - | |
+| |                      TUR  ...  MoldTrans - Tur is a Moldovan limited    | |
+| |                      liabilit...                                        | |
+| |                      1                     AUTOGARA INTERNA\u021aIONAL\u0102      | |
+| |                      CHI\u0218IN\u0102U  ...  Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u is | |
+| |                      a Moldovan...                                      | |
+| |                      2                       PRIM\u0102RIA MUNICIPIULUI      | |
+| |                      CHI\u0218IN\u0102U  ...  PRIM\u0102RIA MUNICIPIULUI CHI\u0218IN\u0102U      | |
+| |                      (Chi\u0219in\u0103u City ...                                 | |
+| |                      3                         CONSILIUL MUNICIPAL      | |
+| |                      CHI\u0218IN\u0102U  ...  CONSILIUL MUNICIPAL CHI\u0218IN\u0102U, also  | |
+| |                      referred to...                                     | |
+| |                      4    ASOCIA\u021aIA DE COPROPRIETARI �N CONDOMINIU NR.  | |
+| |                      5...  ...  ASOCIA\u021aIA DE COPROPRIETARI �N           | |
+| |                      CONDOMINIU NR. 5...                                | |
+| |                      ..                                                 | |
+| |                      ...  ...                                           | |
+| |                      ...                                                | |
+| |                      119                                   STELLA       | |
+| |                      BLE\u0218CEAGA  ...                                     | |
+| |                      120                                   STELLA       | |
+| |                      BLE\u0218CEAGA  ...  Stella Ble\u0219ceaga is the President  | |
+| |                      (Pre\u0219edinte)...                                    | |
+| |                      121                                VLADISLAV       | |
+| |                      GRIBINCEA  ...                                     | |
+| |                      122                                VLADISLAV       | |
+| |                      GRIBINCEA  ...  Vladislav Gribincea is a judge     | |
+| |                      (Judec\u0103tor) on ...                                 | |
+| |                      123                            DESERVIRE SRL V     | |
+| |                      MOLDOVA  ...                                       | |
+| |                                                                         | |
+| |                      [124 rows x 5 columns],                            | |
+| |                              'relationships':                           | |
+| |                      source  ...                                        | |
+| |                      description                                        | |
+| |                      0                     MOLDTRANS - TUR  ...         | |
+| |                      MoldTrans - Tur filed a court claim against th...  | |
+| |                      1                     MOLDTRANS - TUR  ...         | |
+| |                      MoldTrans - Tur filed a court claim against th...  | |
+| |                      2    AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...         | |
+| |                      Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u filed a court...  | |
+| |                      3    AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...         | |
+| |                      Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u is involved i...  | |
+| |                      4    AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...         | |
+| |                      Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u's action is a...  | |
+| |                      ..                                ...  ...         | |
+| |                      ...                                                | |
+| |                      124        CURTEA SUPREM\u0102 DE JUSTI\u021aIE  ...  The    | |
+| |                      Metropolitanate of Basarabia filed a reque...      | |
+| |                      125                     DESERVIRE SRL  ...  CtEDO  | |
+| |                      is the court that heard the Deservire SR...        | |
+| |                      126                     DESERVIRE SRL  ...         | |
+| |                      Moldova is the respondent in the Deservire SRL...  | |
+| |                      127                             CTEDO  ...         | |
+| |                      Moldova is the defendant in the Deservire SRL ...  | |
+| |                      128                             CTEDO  ...  This   | |
+| |                      case is heard by CtEDO, the European Cour...       | |
+| |                                                                         | |
+| |                      [129 rows x 5 columns]                             | |
+| |                          },                                             | |
+| |                          state={},                                      | |
+| |                          errors=None                                    | |
+| |                      )                                                  | |
+| |            outputs = [                                                  | |
+| |                          PipelineRunResult(                             | |
+| |                              workflow='load_input_documents',           | |
+| |                              result=                                    | |
+| |                      text  ...              creation_date               | |
+| |                      0   \n  \n \n \n� N C H E I E R E  \ncu privire    | |
+| |                      l...  ...  2025-09-02 00:00:25 +0300               | |
+| |                      0   \n  \n \n \n� N C H E I E R E  \n \ncu         | |
+| |                      privir...  ...  2025-09-02 00:00:25 +0300          | |
+| |                                                                         | |
+| |                      [2 rows x 4 columns],                              | |
+| |                              state={},                                  | |
+| |                              errors=None                                | |
+| |                          ),                                             | |
+| |                          PipelineRunResult(                             | |
+| |                              workflow='create_base_text_units',         | |
+| |                              result=                                    | |
+| |                      id  ... n_tokens                                   | |
+| |                      0                                                  | |
+| |                      be5586c57174d80d13d953b2d5f22b5b1d2eda60488492...  | |
+| |                      ...     1200                                       | |
+| |                      1                                                  | |
+| |                      0d3b5824dd2ee2bf4c154e0515de151486cf7090ce3dca...  | |
+| |                      ...     1200                                       | |
+| |                      2                                                  | |
+| |                      914c8eacdecb611b24d6b37cec1c49c18f708e4fffe73f...  | |
+| |                      ...     1200                                       | |
+| |                      3                                                  | |
+| |                      d4510d9100b295a579016fe8a3c38672b4a1ab74bae656...  | |
+| |                      ...     1200                                       | |
+| |                      4                                                  | |
+| |                      38b2e337fc733f2b42deaeb7d6fa4f0706dd9f4df9aeb4...  | |
+| |                      ...     1200                                       | |
+| |                      5                                                  | |
+| |                      94277308691ea52ccee73cb0a76651bdf5e86a10f5aea3...  | |
+| |                      ...      496                                       | |
+| |                      6                                                  | |
+| |                      4b1bc63b7ed87a8579c5187f71ebb5325b7624e20a88f2...  | |
+| |                      ...     1200                                       | |
+| |                      7                                                  | |
+| |                      e161731753be35aa87d9a51f666f59e8f7d360fa66eca3...  | |
+| |                      ...     1200                                       | |
+| |                      8                                                  | |
+| |                      ab3160a86bd13598ddad53b9bf845a64097e546b8f7070...  | |
+| |                      ...     1200                                       | |
+| |                      9                                                  | |
+| |                      10d759451b7426ddfd31c5dce628f123ecf37113331222...  | |
+| |                      ...      907                                       | |
+| |                                                                         | |
+| |                      [10 rows x 4 columns],                             | |
+| |                              state={},                                  | |
+| |                              errors=None                                | |
+| |                          ),                                             | |
+| |                          PipelineRunResult(                             | |
+| |                              workflow='create_final_documents',         | |
+| |                              result=                                    | |
+| |                      id  ...  metadata                                  | |
+| |                      0                                                  | |
+| |                      09f738d0652902b130c5fd16bc51ba35c1f99028daa7bd...  | |
+| |                      ...       NaN                                      | |
+| |                      1                                                  | |
+| |                      4542f220c32c13a2fdf7211ee392489e23ea0b1a68a87e...  | |
+| |                      ...       NaN                                      | |
+| |                                                                         | |
+| |                      [2 rows x 7 columns],                              | |
+| |                              state={},                                  | |
+| |                              errors=None                                | |
+| |                          ),                                             | |
+| |                          PipelineRunResult(                             | |
+| |                              workflow='extract_graph',                  | |
+| |                              result={                                   | |
+| |                                  'entities':                            | |
+| |                      title  ...                                         | |
+| |                      description                                        | |
+| |                      0                                      MOLDTRANS - | |
+| |                      TUR  ...  MoldTrans - Tur is a Moldovan limited    | |
+| |                      liabilit...                                        | |
+| |                      1                     AUTOGARA INTERNA\u021aIONAL\u0102      | |
+| |                      CHI\u0218IN\u0102U  ...  Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u is | |
+| |                      a Moldovan...                                      | |
+| |                      2                       PRIM\u0102RIA MUNICIPIULUI      | |
+| |                      CHI\u0218IN\u0102U  ...  PRIM\u0102RIA MUNICIPIULUI CHI\u0218IN\u0102U      | |
+| |                      (Chi\u0219in\u0103u City ...                                 | |
+| |                      3                         CONSILIUL MUNICIPAL      | |
+| |                      CHI\u0218IN\u0102U  ...  CONSILIUL MUNICIPAL CHI\u0218IN\u0102U, also  | |
+| |                      referred to...                                     | |
+| |                      4    ASOCIA\u021aIA DE COPROPRIETARI �N CONDOMINIU NR.  | |
+| |                      5...  ...  ASOCIA\u021aIA DE COPROPRIETARI �N           | |
+| |                      CONDOMINIU NR. 5...                                | |
+| |                      ..                                                 | |
+| |                      ...  ...                                           | |
+| |                      ...                                                | |
+| |                      119                                   STELLA       | |
+| |                      BLE\u0218CEAGA  ...                                     | |
+| |                      120                                   STELLA       | |
+| |                      BLE\u0218CEAGA  ...  Stella Ble\u0219ceaga is the President  | |
+| |                      (Pre\u0219edinte)...                                    | |
+| |                      121                                VLADISLAV       | |
+| |                      GRIBINCEA  ...                                     | |
+| |                      122                                VLADISLAV       | |
+| |                      GRIBINCEA  ...  Vladislav Gribincea is a judge     | |
+| |                      (Judec\u0103tor) on ...                                 | |
+| |                      123                            DESERVIRE SRL V     | |
+| |                      MOLDOVA  ...                                       | |
+| |                                                                         | |
+| |                      [124 rows x 5 columns],                            | |
+| |                                  'relationships':                       | |
+| |                      source  ...                                        | |
+| |                      description                                        | |
+| |                      0                     MOLDTRANS - TUR  ...         | |
+| |                      MoldTrans - Tur filed a court claim against th...  | |
+| |                      1                     MOLDTRANS - TUR  ...         | |
+| |                      MoldTrans - Tur filed a court claim against th...  | |
+| |                      2    AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...         | |
+| |                      Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u filed a court...  | |
+| |                      3    AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...         | |
+| |                      Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u is involved i...  | |
+| |                      4    AUTOGARA INTERNA\u021aIONAL\u0102 CHI\u0218IN\u0102U  ...         | |
+| |                      Autogara Interna\u021bional\u0103 Chi\u0219in\u0103u's action is a...  | |
+| |                      ..                                ...  ...         | |
+| |                      ...                                                | |
+| |                      124        CURTEA SUPREM\u0102 DE JUSTI\u021aIE  ...  The    | |
+| |                      Metropolitanate of Basarabia filed a reque...      | |
+| |                      125                     DESERVIRE SRL  ...  CtEDO  | |
+| |                      is the court that heard the Deservire SR...        | |
+| |                      126                     DESERVIRE SRL  ...         | |
+| |                      Moldova is the respondent in the Deservire SRL...  | |
+| |                      127                             CTEDO  ...         | |
+| |                      Moldova is the defendant in the Deservire SRL ...  | |
+| |                      128                             CTEDO  ...  This   | |
+| |                      case is heard by CtEDO, the European Cour...       | |
+| |                                                                         | |
+| |                      [129 rows x 5 columns]                             | |
+| |                              },                                         | |
+| |                              state={},                                  | |
+| |                              errors=None                                | |
+| |                          )                                              | |
+| |                      ]                                                  | |
+| |           pipeline = <graphrag.index.typing.pipeline.Pipeline object at | |
+| |                      0x000001714F446E10>                                | |
+| |    progress_logger = <graphrag.logger.print_progress.PrintProgressLogg� | |
+| |                      object at 0x000001714F0CD510>                      | |
+| | workflow_callbacks = <graphrag.callbacks.workflow_callbacks_manager.Wo� | |
+| |                      object at 0x000001714C39E8D0>                      | |
+| +-------------------------------------------------------------------------+ |
+|                                                                             |
+| C:\development\graphrag\graphrag\logger\print_progress.py:46 in info        |
+|                                                                             |
+|   43                                                                        |
+|   44     def info(self, message: str) -> None:                              |
+|   45         """Log information."""                                         |
+| > 46         print(f"\n{self.prefix}INFO: {message}")  # noqa T201          |
+|   47                                                                        |
+|   48     def success(self, message: str) -> None:                           |
+|   49         """Log success."""                                             |
+|                                                                             |
+| +-------------------------------- locals ---------------------------------+ |
+| | message = "{'entities':                                                 | |
+| |           title  ...        "+2459                                      | |
+| |    self = <graphrag.logger.print_progress.PrintProgressLogger object at | |
+| |           0x000001714F0CD510>                                           | |
+| +-------------------------------------------------------------------------+ |
+|                                                                             |
+| C:\Users\dorin\.pyenv\pyenv-win\versions\3.11.7\Lib\encodings\cp1252.py:19  |
+| in encode                                                                   |
+|                                                                             |
+|    16                                                                       |
+|    17 class IncrementalEncoder(codecs.IncrementalEncoder):                  |
+|    18     def encode(self, input, final=False):                             |
+| >  19         return codecs.charmap_encode(input,self.errors,encoding_table |
+|    20                                                                       |
+|    21 class IncrementalDecoder(codecs.IncrementalDecoder):                  |
+|    22     def decode(self, input, final=False):                             |
+|                                                                             |
+| +-------------------------------- locals ---------------------------------+ |
+| | final = False                                                           | |
+| | input = "\r\nGraphRAG Indexer INFO: {'entities':                        | |
+| |         "+2510                                                          | |
+| |  self = <encodings.cp1252.IncrementalEncoder object at                  | |
+| |         0x0000017110494750>                                             | |
+| +-------------------------------------------------------------------------+ |
++-----------------------------------------------------------------------------+
+UnicodeEncodeError: 'charmap' codec can't encode character '\u021a' in position
+300: character maps to <undefined>
+=============================================================== short test summary info ================================================================ FAILED tests/smoke/test_fixtures.py::TestIndexer::test_fixture[huggingface] - AssertionError: Indexer failed with return code: 1
+FAILED tests/smoke/test_fixtures.py::TestIndexer::test_fixture[min-csv] - AssertionError: Indexer failed with return code: 1
+FAILED tests/smoke/test_fixtures.py::TestIndexer::test_fixture[text] - AssertionError: Indexer failed with return code: 1
+============================================================ 3 failed in 672.10s (0:11:12) ============================================================= (venv311-7)
