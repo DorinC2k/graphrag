@@ -3,10 +3,12 @@
 
 """A module containing 'CommunityReportsResult' and 'CommunityReportsExtractor' models."""
 
+import json
 import logging
 import re
 import traceback
 from dataclasses import dataclass
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -120,8 +122,81 @@ class CommunityReportsExtractor:
 
         return pattern.sub(replace, prompt)
 
+    @staticmethod
+    def _model_dump(model: Any) -> dict[str, Any]:
+        """Return a dictionary representation for pydantic v1/v2 objects."""
+
+        if model is None:
+            return {}
+
+        if isinstance(model, BaseModel):
+            dump = getattr(model, "model_dump", None)
+            if callable(dump):
+                return dump()
+
+            dump = getattr(model, "dict", None)
+            if callable(dump):
+                return dump()
+
+        if isinstance(model, dict):
+            return model
+
+        return {}
+
+    @staticmethod
+    def _model_dump_json(model: Any, **kwargs: Any) -> str:
+        """Return a JSON representation for pydantic v1/v2 objects."""
+
+        if model is None:
+            return json.dumps({}, **kwargs)
+
+        if isinstance(model, BaseModel):
+            dump_json = getattr(model, "model_dump_json", None)
+            if callable(dump_json):
+                return dump_json(**kwargs)
+
+            dump_json = getattr(model, "json", None)
+            if callable(dump_json):
+                return dump_json(**kwargs)
+
+        if isinstance(model, str):
+            return model
+
+        return json.dumps(CommunityReportsExtractor._model_dump(model), **kwargs)
+
+    @staticmethod
+    def _normalize_findings(raw_findings: Any) -> list[dict[str, str]]:
+        """Normalize findings objects into dictionaries."""
+
+        if not raw_findings:
+            return []
+
+        normalized: list[dict[str, str]] = []
+        for finding in raw_findings:
+            finding_dict = CommunityReportsExtractor._model_dump(finding)
+            if not finding_dict:
+                continue
+            normalized.append(
+                {
+                    "summary": str(finding_dict.get("summary", "")),
+                    "explanation": str(finding_dict.get("explanation", "")),
+                }
+            )
+
+        return normalized
+
     def _get_text_output(self, report: CommunityReportResponse) -> str:
+        report_data = self._model_dump(report)
+        findings = self._normalize_findings(report_data.get("findings"))
         report_sections = "\n\n".join(
-            f"## {f.summary}\n\n{f.explanation}" for f in report.findings
+            f"## {finding['summary']}\n\n{finding['explanation']}"
+            for finding in findings
         )
-        return f"# {report.title}\n\n{report.summary}\n\n{report_sections}"
+
+        title = str(report_data.get("title", ""))
+        summary = str(report_data.get("summary", ""))
+
+        if report_sections:
+            return f"# {title}\n\n{summary}\n\n{report_sections}"
+
+        return f"# {title}\n\n{summary}"
