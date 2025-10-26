@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from pydantic import BaseModel, Field
+from pydantic.errors import PydanticUserError
 
 from graphrag.index.typing.error_handler import ErrorHandlerFn
 from graphrag.language_model.protocol.base import ChatModel
@@ -132,14 +133,31 @@ class CommunityReportsExtractor:
         if isinstance(model, BaseModel):
             dump = getattr(model, "model_dump", None)
             if callable(dump):
-                return dump()
+                try:
+                    return dump()
+                except (PydanticUserError, TypeError):
+                    # Some BaseModel instances (e.g., the abstract BaseModel itself)
+                    # raise user errors when their serializer is accessed. Fall back
+                    # to other serialization strategies in that case.
+                    pass
 
             dump = getattr(model, "dict", None)
             if callable(dump):
-                return dump()
+                try:
+                    return dump()
+                except (PydanticUserError, TypeError):
+                    pass
+
+        raw_dict = getattr(model, "__dict__", None)
+        if isinstance(raw_dict, dict):
+            return {
+                key: value
+                for key, value in raw_dict.items()
+                if not key.startswith("__pydantic")
+            }
 
         if isinstance(model, dict):
-            return model
+            return dict(model)
 
         return {}
 
@@ -153,11 +171,17 @@ class CommunityReportsExtractor:
         if isinstance(model, BaseModel):
             dump_json = getattr(model, "model_dump_json", None)
             if callable(dump_json):
-                return dump_json(**kwargs)
+                try:
+                    return dump_json(**kwargs)
+                except (PydanticUserError, TypeError):
+                    pass
 
             dump_json = getattr(model, "json", None)
             if callable(dump_json):
-                return dump_json(**kwargs)
+                try:
+                    return dump_json(**kwargs)
+                except TypeError:
+                    pass
 
         if isinstance(model, str):
             return model

@@ -15,6 +15,9 @@ def finalize_community_reports(
     communities: pd.DataFrame,
 ) -> pd.DataFrame:
     """All the steps to transform final community reports."""
+    if reports.empty:
+        return pd.DataFrame(columns=COMMUNITY_REPORTS_FINAL_COLUMNS)
+
     # Merge with communities to add shared fields
     community_reports = reports.merge(
         communities.loc[:, ["community", "parent", "children", "size", "period"]],
