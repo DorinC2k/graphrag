@@ -72,19 +72,32 @@ async def _run_extractor(
             log.warning("No report found for community: %s", community)
             return None
 
+        report_dict = CommunityReportsExtractor._model_dump(report)
+        findings = CommunityReportsExtractor._normalize_findings(
+            report_dict.get("findings")
+        )
+
+        rating = report_dict.get("rating")
+        try:
+            rank = float(rating) if rating is not None else 0.0
+        except (TypeError, ValueError):
+            rank = 0.0
+
         return CommunityReport(
             community=community,
             full_content=results.output,
             level=level,
-            rank=report.rating,
-            title=report.title,
-            rating_explanation=report.rating_explanation,
-            summary=report.summary,
+            rank=rank,
+            title=str(report_dict.get("title", "")),
+            rating_explanation=str(report_dict.get("rating_explanation", "")),
+            summary=str(report_dict.get("summary", "")),
             findings=[
-                Finding(explanation=f.explanation, summary=f.summary)
-                for f in report.findings
+                Finding(explanation=finding["explanation"], summary=finding["summary"])
+                for finding in findings
             ],
-            full_content_json=report.model_dump_json(indent=4),
+            full_content_json=CommunityReportsExtractor._model_dump_json(
+                report, indent=4
+            ),
         )
     except Exception as e:
         log.exception("Error processing community: %s", community)
