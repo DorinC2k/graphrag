@@ -121,3 +121,51 @@ async def test_remote_hf_embeddings_http_error():
                 }
             },
         )
+
+
+@pytest.mark.asyncio
+async def test_remote_hf_embeddings_splits_large_inputs():
+    cache = MagicMock(spec=PipelineCache)
+    callbacks = MagicMock(spec=WorkflowCallbacks)
+    callbacks.progress = MagicMock()
+
+    long_text = " ".join(["word"] * 300)
+    recorded_batches: list[list[str]] = []
+
+    def fake_post(*_, **kwargs):
+        batch_inputs: list[str] = kwargs["json"]["inputs"]
+        recorded_batches.append(batch_inputs)
+
+        fake_response = MagicMock()
+        fake_response.json.return_value = [[1.0, 0.0] for _ in batch_inputs]
+        fake_response.raise_for_status.return_value = None
+        return fake_response
+
+    with patch(
+        "graphrag.index.operations.embed_text.strategies.huggingface.requests.post",
+        side_effect=fake_post,
+    ) as mock_post:
+        result = await run(
+            [long_text],
+            callbacks,
+            cache,
+            {
+                "batch_size": 5,
+                "remote_max_input_tokens": 32,
+                "chunk_overlap": 0,
+                "llm": {
+                    "model": "unused",
+                    "api_base": "https://example.com",
+                    "api_key": "tok",
+                    "encoding_model": "cl100k_base",
+                },
+            },
+        )
+
+    assert mock_post.call_count == len(recorded_batches) > 1
+    for batch in recorded_batches:
+        for snippet in batch:
+            assert len(snippet.split()) <= 32
+
+    assert len(result.embeddings) == 1
+    assert result.embeddings[0] == pytest.approx([1.0, 0.0])
