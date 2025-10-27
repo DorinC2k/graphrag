@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 from typing import Any, Iterable
 
 import numpy as np
@@ -31,6 +32,15 @@ from graphrag.logger.progress import progress_ticker
 
 DEFAULT_REMOTE_MAX_BATCH_SIZE = 32
 DEFAULT_REMOTE_MAX_INPUT_TOKENS = 256
+
+
+class HuggingFaceTokenLimitError(RuntimeError):
+    """Raised when a HuggingFace endpoint rejects a request due to token limits."""
+
+    def __init__(self, message: str, *, limit: int | None = None, given: int | None = None) -> None:
+        super().__init__(message)
+        self.limit = limit
+        self.given = given
 
 
 def _as_bearer_token(token: str) -> str:
@@ -92,67 +102,58 @@ async def run(
         batch_max_tokens = max(batch_max_tokens, 1)
         token_limit = min(batch_max_tokens, remote_max_input_tokens)
 
-        splitter = TokenTextSplitter(
-            encoding_name=model_info.get("encoding_model") or ENCODING_MODEL,
-            chunk_size=token_limit,
-            chunk_overlap=chunk_overlap,
-        )
+        chunk_size = token_limit
+        min_chunk_size = max(int(args.get("min_remote_chunk_size") or 1), 1)
 
-        texts, input_sizes = _prepare_embed_texts(input, splitter)
-        if not texts:
-            embeddings = _reconstitute_embeddings([], input_sizes)
-            return TextEmbeddingResult(embeddings=embeddings)
+        while True:
+            splitter = TokenTextSplitter(
+                encoding_name=model_info.get("encoding_model") or ENCODING_MODEL,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+            )
 
-        def _chunks(values: Iterable[str], size: int) -> Iterable[list[str]]:
-            batch: list[str] = []
-            for value in values:
-                batch.append(value)
-                if len(batch) == size:
-                    yield batch
-                    batch = []
-            if batch:
-                yield batch
+            texts, input_sizes = _prepare_embed_texts(input, splitter)
+            if not texts:
+                embeddings = _reconstitute_embeddings([], input_sizes)
+                return TextEmbeddingResult(embeddings=embeddings)
 
-        ticker = progress_ticker(callbacks.progress, len(texts))
-        all_embeddings: list[Any] = []
-
-        for batch in _chunks(texts, effective_batch_size):
             try:
-                response = await asyncio.to_thread(
-                    requests.post,
+                all_embeddings = await _embed_remote_texts(
+                    texts,
+                    effective_batch_size,
                     api_base,
-                    headers={
-                        "Authorization": _as_bearer_token(api_key),
-                        "Accept": "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    json={"inputs": batch},
-                    timeout=30,
+                    api_key,
+                    callbacks,
                 )
-                response.raise_for_status()
-                data = response.json()
-            except requests.RequestException as e:  # pragma: no cover - network failures
-                status = getattr(e.response, "status_code", "unknown")
-                text = getattr(e.response, "text", "")
-                msg = f"HuggingFace embedding request failed: {status} {text}"
-                callbacks.error(msg, e)
-                raise RuntimeError(msg) from e
+            except HuggingFaceTokenLimitError as error:
+                if chunk_size <= min_chunk_size:
+                    msg = (
+                        "HuggingFace embedding request exceeded token limit (limit=%s, given=%s) "
+                        "and minimum chunk size %s was reached"
+                        % (error.limit, error.given, min_chunk_size)
+                    )
+                    callbacks.error(msg, error)
+                    raise RuntimeError(msg) from error
 
-            if isinstance(data, dict):
-                embeddings = data.get("embeddings")
-            else:
-                embeddings = data
+                next_chunk_size = max(min_chunk_size, int(chunk_size * 0.8))
 
-            if embeddings is None:
-                msg = "HuggingFace embedding response did not include embeddings"
-                raise RuntimeError(msg)
+                if error.limit is not None and error.limit > 1:
+                    next_chunk_size = min(next_chunk_size, error.limit - 1)
+                if next_chunk_size >= chunk_size:
+                    next_chunk_size = max(min_chunk_size, chunk_size - 1)
 
-            all_embeddings.extend(embeddings)
-            ticker(len(batch))
+                callbacks.warning(
+                    "HuggingFace token limit exceeded (limit=%s, given=%s); retrying with chunk "
+                    "size %s"
+                    % (error.limit, error.given, next_chunk_size)
+                )
 
-        resolved_embeddings = _reconstitute_embeddings(all_embeddings, input_sizes)
+                chunk_size = next_chunk_size
+                continue
 
-        return TextEmbeddingResult(embeddings=resolved_embeddings)
+            resolved_embeddings = _reconstitute_embeddings(all_embeddings, input_sizes)
+
+            return TextEmbeddingResult(embeddings=resolved_embeddings)
 
     if model_name is None:
         msg = "HuggingFace model name not provided"
@@ -182,6 +183,94 @@ async def run(
         ]
 
     return TextEmbeddingResult(embeddings=emb_list)
+
+
+async def _embed_remote_texts(
+    texts: list[str],
+    batch_size: int,
+    api_base: str,
+    api_key: str,
+    callbacks: WorkflowCallbacks,
+) -> list[Any]:
+    ticker = progress_ticker(callbacks.progress, len(texts))
+    all_embeddings: list[Any] = []
+
+    for batch in _chunks(texts, batch_size):
+        try:
+            response = await asyncio.to_thread(
+                requests.post,
+                api_base,
+                headers={
+                    "Authorization": _as_bearer_token(api_key),
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                json={"inputs": batch},
+                timeout=30,
+            )
+            response.raise_for_status()
+        except requests.HTTPError as error:
+            status = getattr(error.response, "status_code", "unknown")
+            text = getattr(error.response, "text", str(error))
+            limit, given = _parse_token_limit_error(text)
+            if status == 413 or limit is not None:
+                raise HuggingFaceTokenLimitError(
+                    f"HuggingFace embedding request failed: {status} {text}",
+                    limit=limit,
+                    given=given,
+                ) from error
+
+            msg = f"HuggingFace embedding request failed: {status} {text}"
+            callbacks.error(msg, error)
+            raise RuntimeError(msg) from error
+        except requests.RequestException as error:  # pragma: no cover - network failures
+            status = getattr(error.response, "status_code", "unknown")
+            text = getattr(error.response, "text", "")
+            msg = f"HuggingFace embedding request failed: {status} {text}"
+            callbacks.error(msg, error)
+            raise RuntimeError(msg) from error
+
+        data = response.json()
+
+        if isinstance(data, dict):
+            embeddings = data.get("embeddings")
+        else:
+            embeddings = data
+
+        if embeddings is None:
+            msg = "HuggingFace embedding response did not include embeddings"
+            raise RuntimeError(msg)
+
+        all_embeddings.extend(embeddings)
+        ticker(len(batch))
+
+    return all_embeddings
+
+
+def _chunks(values: Iterable[str], size: int) -> Iterable[list[str]]:
+    batch: list[str] = []
+    for value in values:
+        batch.append(value)
+        if len(batch) == size:
+            yield batch
+            batch = []
+    if batch:
+        yield batch
+
+
+def _parse_token_limit_error(text: str) -> tuple[int | None, int | None]:
+    if not text:
+        return (None, None)
+
+    match = re.search(r"less than (\d+) tokens.*Given:\s*(\d+)", text, re.IGNORECASE | re.DOTALL)
+    if match:
+        return (int(match.group(1)), int(match.group(2)))
+
+    match = re.search(r"less than (\d+) tokens", text, re.IGNORECASE)
+    if match:
+        return (int(match.group(1)), None)
+
+    return (None, None)
 
 
 def _prepare_embed_texts(
