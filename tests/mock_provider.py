@@ -6,15 +6,73 @@
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
 
-from pydantic import BaseModel
+try:  # pragma: no cover - optional dependency for tests
+    from pydantic import BaseModel
+except ModuleNotFoundError:  # pragma: no cover - lightweight fallback for minimal environments
+    class BaseModel:  # type: ignore[no-redef]
+        """Fallback BaseModel implementation used when pydantic is unavailable."""
+
+        def model_dump_json(self) -> str:
+            from json import dumps
+
+            return dumps(self.__dict__)
 
 from graphrag.config.enums import ModelType
-from graphrag.config.models.language_model_config import LanguageModelConfig
-from graphrag.language_model.response.base import (
-    BaseModelOutput,
-    BaseModelResponse,
-    ModelResponse,
-)
+try:  # pragma: no cover - optional dependency chain for tests
+    from graphrag.config.models.language_model_config import LanguageModelConfig
+except Exception:  # pragma: no cover - fallback when pydantic or other deps are unavailable
+    class LanguageModelConfig:  # type: ignore[no-redef]
+        """Lightweight stand-in used when full configuration models cannot be imported."""
+
+        def __init__(
+            self,
+            *,
+            type: Any,
+            model: str,
+            api_key: str | None = None,
+            responses: list[str] | None = None,
+            **_: Any,
+        ) -> None:
+            self.type = type
+            self.model = model
+            self.api_key = api_key
+            self.responses = responses or []
+try:  # pragma: no cover - optional dependency chain for tests
+    from graphrag.language_model.response.base import (
+        BaseModelOutput,
+        BaseModelResponse,
+        ModelResponse,
+    )
+except Exception:  # pragma: no cover - fallback when pydantic is unavailable
+    class BaseModelOutput:  # type: ignore[no-redef]
+        def __init__(
+            self,
+            *,
+            content: str,
+            full_response: dict[str, Any] | None = None,
+        ) -> None:
+            self.content = content
+            self.full_response = full_response
+
+    class BaseModelResponse:  # type: ignore[no-redef]
+        def __init__(
+            self,
+            *,
+            output: BaseModelOutput,
+            parsed_response: BaseModel | None = None,
+            history: list[Any] | None = None,
+            tool_calls: list[Any] | None = None,
+            metrics: Any | None = None,
+            cache_hit: bool | None = None,
+        ) -> None:
+            self.output = output
+            self.parsed_response = parsed_response
+            self.history = history or []
+            self.tool_calls = tool_calls or []
+            self.metrics = metrics
+            self.cache_hit = cache_hit
+
+    ModelResponse = BaseModelResponse  # type: ignore[assignment]
 
 
 class MockChatLLM:

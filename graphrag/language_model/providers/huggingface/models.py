@@ -10,7 +10,11 @@ for backward compatibility.
 from typing import TYPE_CHECKING, Any
 import asyncio
 import os
-import requests
+
+try:  # pragma: no cover - optional dependency handling
+    import requests
+except ModuleNotFoundError:
+    requests = None  # type: ignore[assignment]
 
 try:
     from sentence_transformers import SentenceTransformer
@@ -85,6 +89,10 @@ class HuggingFaceEmbeddingModel:
 
     def embed_batch(self, text_list: list[str], **kwargs: Any) -> list[list[float]]:
         if self.api_base:
+            if requests is None:  # pragma: no cover - optional dependency handling
+                raise ImportError(
+                    "requests is required to call remote HuggingFace embeddings",
+                )
             try:
                 headers = {
                     "Accept": "application/json",
@@ -100,9 +108,7 @@ class HuggingFaceEmbeddingModel:
                 )
                 response.raise_for_status()
                 data = response.json()
-            except (
-                requests.RequestException
-            ) as e:  # pragma: no cover - network failures
+            except requests.RequestException as e:  # pragma: no cover - network failures
                 msg = "HuggingFace embedding request failed"
                 raise RuntimeError(msg) from e
 

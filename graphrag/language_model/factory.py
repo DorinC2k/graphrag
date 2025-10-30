@@ -8,15 +8,23 @@ from typing import Any, ClassVar
 
 from graphrag.config.enums import ModelType
 from graphrag.language_model.protocol import ChatModel, EmbeddingModel
-from graphrag.language_model.providers.fnllm.models import (
-    AzureOpenAIChatFNLLM,
-    AzureOpenAIEmbeddingFNLLM,
-    OpenAIChatFNLLM,
-    OpenAIEmbeddingFNLLM,
-)
 from graphrag.language_model.providers.huggingface.models import (
     HuggingFaceEmbeddingModel,
 )
+
+try:
+    from graphrag.language_model.providers.fnllm.models import (
+        AzureOpenAIChatFNLLM,
+        AzureOpenAIEmbeddingFNLLM,
+        OpenAIChatFNLLM,
+        OpenAIEmbeddingFNLLM,
+    )
+except ModuleNotFoundError as exc:  # pragma: no cover - exercised in environments without fnllm
+    if exc.name != "fnllm":
+        raise
+    _FNLLM_AVAILABLE = False
+else:  # pragma: no cover - simple availability flag assignment
+    _FNLLM_AVAILABLE = True
 
 
 class ModelFactory:
@@ -113,19 +121,21 @@ class ModelFactory:
 
 
 # --- Register default implementations ---
-ModelFactory.register_chat(
-    ModelType.AzureOpenAIChat, lambda **kwargs: AzureOpenAIChatFNLLM(**kwargs)
-)
-ModelFactory.register_chat(
-    ModelType.OpenAIChat, lambda **kwargs: OpenAIChatFNLLM(**kwargs)
-)
+if _FNLLM_AVAILABLE:
+    ModelFactory.register_chat(
+        ModelType.AzureOpenAIChat, lambda **kwargs: AzureOpenAIChatFNLLM(**kwargs)
+    )
+    ModelFactory.register_chat(
+        ModelType.OpenAIChat, lambda **kwargs: OpenAIChatFNLLM(**kwargs)
+    )
 
-ModelFactory.register_embedding(
-    ModelType.AzureOpenAIEmbedding, lambda **kwargs: AzureOpenAIEmbeddingFNLLM(**kwargs)
-)
-ModelFactory.register_embedding(
-    ModelType.OpenAIEmbedding, lambda **kwargs: OpenAIEmbeddingFNLLM(**kwargs)
-)
+    ModelFactory.register_embedding(
+        ModelType.AzureOpenAIEmbedding,
+        lambda **kwargs: AzureOpenAIEmbeddingFNLLM(**kwargs),
+    )
+    ModelFactory.register_embedding(
+        ModelType.OpenAIEmbedding, lambda **kwargs: OpenAIEmbeddingFNLLM(**kwargs)
+    )
 ModelFactory.register_embedding(
     ModelType.HuggingFaceEmbedding,
     lambda **kwargs: HuggingFaceEmbeddingModel(**kwargs),

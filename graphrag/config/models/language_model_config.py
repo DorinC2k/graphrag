@@ -6,7 +6,11 @@
 import os
 from typing import Literal
 
-import tiktoken
+try:  # pragma: no cover - optional dependency in lightweight environments
+    import tiktoken
+except ModuleNotFoundError:  # pragma: no cover - fallback for environments without tiktoken
+    tiktoken = None  # type: ignore[assignment]
+
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 import graphrag.config.defaults as defs
@@ -177,6 +181,9 @@ class LanguageModelConfig(BaseModel):
         if self.encoding_model.strip() == "" and self.type not in (
             ModelType.HuggingFaceEmbedding,
         ):
+            if tiktoken is None:  # pragma: no cover - exercised without tiktoken installed
+                self.encoding_model = defs.ENCODING_MODEL
+                return
             try:
                 self.encoding_model = tiktoken.encoding_name_for_model(self.model)
             except KeyError:
