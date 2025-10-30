@@ -1,0 +1,84 @@
+models:
+  default_chat_model:
+    azure_auth_type: api_key
+    type: ${GRAPHRAG_LLM_TYPE}
+    api_key: ${GRAPHRAG_API_KEY}
+    api_base: ${GRAPHRAG_API_BASE}
+    api_version: "2025-01-01-preview"
+    deployment_name: ${GRAPHRAG_LLM_DEPLOYMENT_NAME}
+    model: ${GRAPHRAG_LLM_MODEL}
+    tokens_per_minute: ${GRAPHRAG_LLM_TPM}
+    requests_per_minute: ${GRAPHRAG_LLM_RPM}
+    model_supports_json: true
+    concurrent_requests: 50
+    async_mode: threaded
+  # default_embedding_model:
+    # type: huggingface_embedding
+    # api_key: &hf_api_key ${HUGGINGFACE_API_TOKEN}
+    # api_base: &hf_api_base ${HUGGINGFACE_API_BASE}
+    # model: &hf_model sentence-transformers/all-MiniLM-L6-v2
+    # encoding_model: cl100k_base
+    # tokens_per_minute: null
+    # requests_per_minute: null
+    # concurrent_requests: 50
+    # async_mode: threaded
+  default_embedding_model:
+    type: huggingface_embedding
+    api_key: &hf_api_key ${HUGGINGFACE_API_TOKEN}
+    model: &hf_model sentence-transformers/all-MiniLM-L6-v2
+    api_base: &hf_api_base ${HUGGINGFACE_API_BASE}
+    api_version: "2025-08-07"
+    concurrent_requests: 50
+    async_mode: threaded
+    retry_strategy: native
+    max_retries: 10    
+
+vector_store:
+  default_vector_store:
+    type: "lancedb"
+    db_uri: "./tests/fixtures/huggingface/lancedb"
+    container_name: "huggingface_lancedb_ci"
+    overwrite: True
+
+extract_claims:
+  enabled: true
+  
+# extract_graph:
+  # # The mREBEL strategy runs locally via Hugging Face, so no chat model is required.
+  # entity_types: [organization, person, geo, event]
+  # max_gleanings: 1S
+  # strategy:
+    # max_input_length: 512
+    # max_new_tokens: 256
+    # num_beams: 3
+        
+# extract_graph:
+  # model_id: default_chat_model
+  # prompt: "prompts/extract_graph.txt"
+  # entity_types: [organization, person, geo, event]
+  # max_gleanings: 1
+  # strategy:
+    # type: graph_intelligence
+    # max_input_length: 512
+    # max_new_tokens: 256
+    # num_beams: 3
+
+community_reports:
+  graph_prompt: "prompts/community_report.txt"
+  max_length: 2000
+  max_input_length: 8000
+
+snapshots:
+  embeddings: True
+
+drift_search:
+  n_depth: 1
+  drift_k_followups: 3
+  primer_folds: 3
+
+embed_text:
+  strategy:
+    type: "huggingface"
+    model: *hf_model
+    api_key: *hf_api_key
+    api_base: *hf_api_base
