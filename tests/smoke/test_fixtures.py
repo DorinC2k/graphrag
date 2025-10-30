@@ -14,8 +14,24 @@ from functools import wraps
 from typing import Any, ClassVar
 from unittest import mock
 
-import pandas as pd
 import pytest
+
+pytest.importorskip(
+    "fnllm",
+    reason=(
+        "The fnllm package is required for smoke fixture tests. "
+        "Install with `pip install fnllm[azure,openai]` to enable these tests."
+    ),
+)
+pytest.importorskip(
+    "pandas",
+    reason=(
+        "The pandas package is required for smoke fixture validations. "
+        "Install with `pip install pandas pyarrow` to enable these tests."
+    ),
+)
+
+import pandas as pd
 
 from graphrag.query.context_builder.community_context import NO_COMMUNITY_RECORDS_WARNING
 from graphrag.storage.blob_pipeline_storage import BlobPipelineStorage
@@ -195,10 +211,16 @@ class TestIndexer:
         ]
         return subprocess.run(command, env=build_subprocess_env(extra_vars), capture_output=True, text=True)
 
+    def __run_queries(self, root: Path, query_config: list[dict[str, str]], embedding_type: str):
+        for query in query_config:
+            result = self.__run_query(root, query, {"GRAPHRAG_EMBEDDING_TYPE": embedding_type})
+            print(f"Query: {query}\nResponse: {result.stdout}")
+            assert result.returncode == 0 and result.stdout
+
     @cleanup(skip=debug)
     @mock.patch.dict(os.environ, env_vars, clear=True)
     @pytest.mark.timeout(2000)
-    def test_fixture(self, input_path: str, input_file_type: str,
+    def test_fixture(self, request, input_path: str, input_file_type: str,
                      workflow_config: dict[str, dict[str, Any]],
                      query_config: list[dict[str, str]]):
         if workflow_config.get("skip"):
@@ -207,6 +229,16 @@ class TestIndexer:
         embedding_type = (
             "huggingface_embedding" if "huggingface" in input_path else "azure_openai_embedding"
         )
+        queries_only = request.config.getoption("run_queries_only")
+        if queries_only:
+            output_path = root / "output"
+            if not output_path.exists():
+                pytest.skip(
+                    "Query-only run requested, but no existing index output found. "
+                    "Run the index step first or omit --run_queries_only."
+                )
+            self.__run_queries(root, query_config, embedding_type)
+            return
         dispose = asyncio.run(prepare_azurite_data(input_path, workflow_config["azure"])) \
             if workflow_config.get("azure") else None
         self.__run_indexer(root, input_file_type, embedding_type)
@@ -214,7 +246,4 @@ class TestIndexer:
             dispose()
         if not workflow_config.get("skip_assert"):
             self.__assert_indexer_outputs(root, workflow_config)
-        for query in query_config:
-            result = self.__run_query(root, query, {"GRAPHRAG_EMBEDDING_TYPE": embedding_type})
-            print(f"Query: {query}\nResponse: {result.stdout}")
-            assert result.returncode == 0 and result.stdout
+        self.__run_queries(root, query_config, embedding_type)
