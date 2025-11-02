@@ -97,7 +97,7 @@
         "generate_text_embeddings": {
             "row_range": [
                 1,
-                100
+                200
             ],
             "max_runtime": 150,
             "expected_artifacts": [
@@ -109,19 +109,19 @@
     },
     "query_config": [
         {
-            "query": "Who is Agent Alex Mercer and what are his goals?",
+            "query": "Who is DESERVIRE SRL, in which cases was it involved and what are their complaints and demands in each? If you reference entities or relationships also show their number and their human readable description so i can understand them",
             "method": "local"
         },
         {
-            "query": "What is the major conflict in this story and who are the protagonist and antagonist?",
+            "query": "Which are the main topics talked about? If you reference entities or relationships also show their number and their human readable description so i can understand them",
             "method": "global"
         },
         {
-            "query": "What is the main theme of the story?",
+            "query": "Who are the entities that has CSJ interacted with? If you reference entities or relationships also show their number and their human readable description so i can understand them",
             "method": "drift"
         },
         {
-            "query": "Who is Jordan Hayes?",
+            "query": "Who is DESERVIRE SRL?",
             "method": "basic"
         }
     ],

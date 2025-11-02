@@ -8,13 +8,11 @@ from __future__ import annotations
 import asyncio
 import threading
 from typing import TYPE_CHECKING, Any, TypeVar
+from collections.abc import Mapping  # ← added
 
 from fnllm.base.config import JsonStrategy, RetryStrategy
 from fnllm.openai import AzureOpenAIConfig, OpenAIConfig, PublicOpenAIConfig
 from fnllm.openai.types.chat.parameters import OpenAIChatParameters
-from openai.types.shared_params.response_format_json_object import (
-    ResponseFormatJSONObject,
-)
 
 import graphrag.config.defaults as defs
 from graphrag.language_model.providers.fnllm.cache import FNLLMCacheProvider
@@ -135,7 +133,6 @@ def is_reasoning_model(model: str) -> bool:
 
 def is_responses_model(model: str) -> bool:
     """Return whether the model should be invoked with the Responses API."""
-
     normalized = model.lower()
     return normalized.startswith("gpt-4.1") or normalized.startswith("gpt-5")
 
@@ -168,9 +165,20 @@ def get_openai_model_parameters_from_dict(config: dict[str, Any]) -> dict[str, A
             params["top_p"] = config.get("top_p")
         if config.get("response_format"):
             response_format = config["response_format"]
-            if isinstance(response_format, ResponseFormatJSONObject):
-                params["response_format"] = {"type": "json_object"}
+            # TypedDicts are not runtime-checkable; inspect the value's shape instead.
+            if isinstance(response_format, Mapping):
+                # Normalize {'type': 'json_object'} and pass through other mapping shapes (e.g., json_schema).
+                if response_format.get("type") == "json_object":
+                    params["response_format"] = {"type": "json_object"}
+                else:
+                    params["response_format"] = response_format
+            elif isinstance(response_format, str):
+                # Allow shorthand "json_object"
+                params["response_format"] = (
+                    {"type": "json_object"} if response_format == "json_object" else response_format
+                )
             else:
+                # Fallback: pass through as-is
                 params["response_format"] = response_format
         return params
 

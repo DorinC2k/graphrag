@@ -76,7 +76,7 @@ env_vars = {
     "GRAPHRAG_EMBEDDING_API_VERSION": "2",
     "GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME": "sentence-transformers/all-MiniLM-L6-v2",
     "GRAPHRAG_EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2",
-    "HUGGINGFACE_API_TOKEN": os.getenv("HUGGINGFACE_API_TOKEN", "a"),
+    "HUGGINGFACE_API_TOKEN": os.getenv("HUGGINGFACE_API_TOKEN", "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"),
     "HUGGINGFACE_API_BASE": os.getenv("HUGGINGFACE_API_BASE", "https://cgglxt1hbsrcvegq.us-east-1.aws.endpoints.huggingface.cloud"),
     "HOME": safe_home,
     "NLTK_DATA": os.path.join(safe_home, "nltk_data"),
@@ -203,13 +203,30 @@ class TestIndexer:
 
     def __run_query(self, root: Path, query_config: dict[str, str], extra_vars: dict | None = None):
         command = [
-            "poetry", "run", "poe", "query",
+            sys.executable, "-X", "utf8",  # ← force UTF-8 mode
+            "-m", "graphrag", "query",
             "--root", root.resolve().as_posix(),
             "--method", query_config["method"],
             "--community-level", str(query_config.get("community_level", 2)),
             "--query", query_config["query"],
         ]
-        return subprocess.run(command, env=build_subprocess_env(extra_vars), capture_output=True, text=True)
+        result = subprocess.run(
+            command,
+            env=build_subprocess_env(extra_vars | {"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"} if extra_vars else {"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",   # ← Python 3.11 supports this
+            errors="replace",   # ← avoid hard failures on odd bytes
+        )
+        print("Command:", " ".join(command))
+        if result.stdout:
+            print("STDOUT:\n", result.stdout)
+        if result.stderr:
+            print("STDERR:\n", result.stderr)
+        assert result.returncode == 0 and result.stdout, "Query failed; see STDERR above"
+        return result
+
+
 
     def __run_queries(self, root: Path, query_config: list[dict[str, str]], embedding_type: str):
         for query in query_config:
@@ -226,9 +243,7 @@ class TestIndexer:
         if workflow_config.get("skip"):
             pytest.skip(f"Skipping smoke test {input_path}")
         root = Path(input_path)
-        embedding_type = (
-            "huggingface_embedding" if "huggingface" in input_path else "azure_openai_embedding"
-        )
+        embedding_type = "huggingface_embedding"
         queries_only = request.config.getoption("run_queries_only")
         if queries_only:
             output_path = root / "output"

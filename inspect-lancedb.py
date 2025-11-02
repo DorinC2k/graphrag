@@ -11,7 +11,7 @@ except ImportError:
     sys.exit(1)
 
 # Default LanceDB path
-DEFAULT_DB_PATH = r"C:\development\graphrag\tests\fixtures\min-csv\tests\fixtures\min-csv\lancedb"
+DEFAULT_DB_PATH = r"C:\development\graphrag\tests\fixtures\huggingface\tests\fixtures\huggingface\tests\lancedb"
 
 
 def choose_table_interactively(db) -> str:
