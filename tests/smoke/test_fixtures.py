@@ -76,7 +76,7 @@ env_vars = {
     "GRAPHRAG_EMBEDDING_API_VERSION": "2",
     "GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME": "sentence-transformers/all-MiniLM-L6-v2",
     "GRAPHRAG_EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2",
-    "HUGGINGFACE_API_TOKEN": os.getenv("HUGGINGFACE_API_TOKEN", "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"),
+    "HUGGINGFACE_API_TOKEN": os.getenv("HUGGINGFACE_API_TOKEN", "a"),
     "HUGGINGFACE_API_BASE": os.getenv("HUGGINGFACE_API_BASE", "https://cgglxt1hbsrcvegq.us-east-1.aws.endpoints.huggingface.cloud"),
     "HOME": safe_home,
     "NLTK_DATA": os.path.join(safe_home, "nltk_data"),
