@@ -1,12 +1,30 @@
+models:
+  default_chat_model:
+    azure_auth_type: api_key
+    type: ${GRAPHRAG_LLM_TYPE}
+    api_key: ${GRAPHRAG_API_KEY}
+    api_base: ${GRAPHRAG_API_BASE}
+    api_version: "2025-01-01-preview"
+    deployment_name: ${GRAPHRAG_LLM_DEPLOYMENT_NAME}
+    model: ${GRAPHRAG_LLM_MODEL}
+    tokens_per_minute: ${GRAPHRAG_LLM_TPM}
+    requests_per_minute: ${GRAPHRAG_LLM_RPM}
+    model_supports_json: true
+    concurrent_requests: 50
+    async_mode: threaded
+  default_embedding_model:
+    type: huggingface_embedding
+    api_key: &hf_api_key ${HUGGINGFACE_API_TOKEN}
+    model: &hf_model sentence-transformers/all-MiniLM-L6-v2
+    api_base: &hf_api_base ${HUGGINGFACE_API_BASE}
+    api_version: "2025-08-07"
+    concurrent_requests: 50
+    async_mode: threaded
+    retry_strategy: native
+    max_retries: 10
+    
 extract_claims:
   enabled: true
-
-# vector_store:
-  # default_vector_store:
-    # type: "azure_ai_search"
-    # url: ${AZURE_AI_SEARCH_URL_ENDPOINT}
-    # api_key: ${AZURE_AI_SEARCH_API_KEY}
-    # container_name: "azure_ci"
 
 vector_store:
   default_vector_store:
@@ -19,7 +37,7 @@ input:
   storage:
     type: blob
     connection_string: ${LOCAL_BLOB_STORAGE_CONNECTION_STRING}
-    container_name: azurefixture
+    container_name: testmaxsize
     base_dir: input
   file_type: text 
 
@@ -41,9 +59,9 @@ reporting:
   container_name: azurefixture
   base_dir: reports
  
- embed_text:
+embed_text:
   strategy:
     type: "huggingface"
-    model: *hf_model
-    api_key: *hf_api_key
-    api_base: *hf_api_base
+    model: ${GRAPHRAG_EMBEDDING_MODEL}
+    api_key: ${HUGGINGFACE_API_TOKEN}
+    api_base: ${HUGGINGFACE_API_BASE}
