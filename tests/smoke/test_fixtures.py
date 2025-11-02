@@ -112,7 +112,7 @@ def _load_fixtures():
             continue
         config_file = full_path / "config.json"
         params.append((subfolder, json.loads(config_file.read_text(encoding="utf-8"))))
-    return params[1:]  # skip azure test
+    return params
 
 def pytest_generate_tests(metafunc):
     run_slow = metafunc.config.getoption("run_slow")
