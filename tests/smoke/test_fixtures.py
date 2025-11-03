@@ -257,8 +257,8 @@ class TestIndexer:
         dispose = asyncio.run(prepare_azurite_data(input_path, workflow_config["azure"])) \
             if workflow_config.get("azure") else None
         self.__run_indexer(root, input_file_type, embedding_type)
-        if dispose:
-            dispose()
+        # if dispose:
+            # dispose()
         if not workflow_config.get("skip_assert"):
             self.__assert_indexer_outputs(root, workflow_config)
         self.__run_queries(root, query_config, embedding_type)
