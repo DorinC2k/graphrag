@@ -5,7 +5,7 @@
         "skip_assert": true,
         "azure": {
             "input_container": "azurefixture",
-            "input_base_dir": "input/input"
+            "input_base_dir": "input"
         }
     },
     "query_config": [],
