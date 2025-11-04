@@ -119,10 +119,20 @@ class BlobPipelineStorage(PipelineStorage):
         """
         base_dir = base_dir or ""
         prefix_parts = []
-        if self._path_prefix:
-            prefix_parts.append(self._path_prefix.strip("/"))
-        if base_dir:
-            prefix_parts.append(base_dir.strip("/"))
+
+        sanitized_prefix = self._path_prefix.replace("\\", "/").strip("/")
+        sanitized_base_dir = base_dir.replace("\\", "/").strip("/")
+
+        if sanitized_prefix:
+            prefix_parts.append(sanitized_prefix)
+
+        if sanitized_base_dir:
+            if sanitized_prefix and sanitized_base_dir.startswith(sanitized_prefix):
+                remainder = sanitized_base_dir[len(sanitized_prefix) :].lstrip("/")
+                if remainder:
+                    prefix_parts.append(remainder)
+            else:
+                prefix_parts.append(sanitized_base_dir)
         prefix = "/".join(prefix_parts)
         if prefix and not prefix.endswith("/"):
             prefix += "/"
