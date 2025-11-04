@@ -104,13 +104,17 @@ class GraphRagConfig(BaseModel):
 
     def _validate_input_base_dir(self) -> None:
         """Validate the input base directory."""
+        base_dir = (self.input.storage.base_dir or "").strip()
+        if base_dir in {".", "./"}:
+            base_dir = ""
         if self.input.storage.type == defs.StorageType.file:
-            if self.input.storage.base_dir.strip() == "":
-                msg = "input storage base directory is required for file input storage. Please rerun `graphrag init` and set the input storage configuration."
-                raise ValueError(msg)
+            if base_dir == "":
+                base_dir = defs.DEFAULT_INPUT_FILE_BASE_DIR
             self.input.storage.base_dir = str(
-                (Path(self.root_dir) / self.input.storage.base_dir).resolve()
+                (Path(self.root_dir) / base_dir).resolve()
             )
+        else:
+            self.input.storage.base_dir = base_dir
 
     chunks: ChunkingConfig = Field(
         description="The chunking configuration to use.",
