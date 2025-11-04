@@ -25,6 +25,7 @@ from graphrag.index.operations.build_noun_graph.np_extractors.stop_words import 
 from graphrag.vector_stores.factory import VectorStoreType
 
 DEFAULT_OUTPUT_BASE_DIR = "output"
+DEFAULT_INPUT_FILE_BASE_DIR = "input"
 # DEFAULT_CHAT_MODEL_ID = "default_chat_model"
 DEFAULT_CHAT_MODEL_ID = "default_chat_model"
 DEFAULT_CHAT_MODEL_TYPE = ModelType.OpenAIChat
@@ -250,7 +251,7 @@ class StorageDefaults:
 class InputStorageDefaults(StorageDefaults):
     """Default values for input storage."""
 
-    base_dir: str = "input"
+    base_dir: str = ""
 
 
 @dataclass
