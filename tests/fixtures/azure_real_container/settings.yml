@@ -38,7 +38,7 @@ input:
     type: blob
     connection_string: ${LOCAL_BLOB_STORAGE_CONNECTION_STRING}
     container_name: law-cases
-    base_dir: input
+    base_dir: md/csj/civil/2025/2025-02-10
   file_type: text 
 
 cache:
