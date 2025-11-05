@@ -9,6 +9,7 @@ from typing import Any
 
 import pandas as pd
 
+from graphrag.config.enums import StorageType
 from graphrag.config.models.input_config import InputConfig
 from graphrag.index.utils.hashing import gen_sha512_hash
 from graphrag.logger.base import ProgressLogger
@@ -24,16 +25,18 @@ async def load_files(
     progress: ProgressLogger | None,
 ) -> pd.DataFrame:
     """Load files from storage and apply a loader function."""
-    files = list(
-        storage.find(
-            re.compile(config.file_pattern),
-            base_dir=config.storage.base_dir,
-            progress=progress,
-            file_filter=config.file_filter,
-            max_count=config.max_files if config.max_files is not None else -1,
-            max_total_size_mb=config.max_total_size_mb,
-        )
+    find_kwargs = dict(
+        file_pattern=re.compile(config.file_pattern),
+        progress=progress,
+        file_filter=config.file_filter,
+        max_count=config.max_files if config.max_files is not None else -1,
+        max_total_size_mb=config.max_total_size_mb,
     )
+
+    if config.storage.type == StorageType.file:
+        find_kwargs["base_dir"] = config.storage.base_dir
+
+    files = list(storage.find(**find_kwargs))
 
     if len(files) == 0:
         msg = f"No {config.file_type} files found in {config.storage.base_dir}"
