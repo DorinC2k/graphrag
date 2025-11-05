@@ -6,8 +6,7 @@
 import logging
 import re
 from collections.abc import Iterator
-from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient
@@ -20,6 +19,21 @@ from graphrag.storage.pipeline_storage import (
 )
 
 log = logging.getLogger(__name__)
+
+
+def _normalize_segment(segment: str | None) -> str:
+    """Normalize a single path segment for blob storage."""
+
+    if not segment:
+        return ""
+    return segment.replace("\\", "/").strip("/")
+
+
+def _join_segments(segments: Iterable[str | None]) -> str:
+    """Join path segments using forward slashes."""
+
+    normalized = [segment for segment in (_normalize_segment(s) for s in segments) if segment]
+    return "/".join(normalized)
 
 
 class BlobPipelineStorage(PipelineStorage):
@@ -56,10 +70,10 @@ class BlobPipelineStorage(PipelineStorage):
         self._encoding = encoding
         self._container_name = container_name
         self._connection_string = connection_string
-        sanitized_prefix = path_prefix or ""
+        sanitized_prefix = _normalize_segment(path_prefix)
         if sanitized_prefix in {".", "./"}:
             sanitized_prefix = ""
-        self._path_prefix = sanitized_prefix.strip("/")
+        self._path_prefix = sanitized_prefix
         self._storage_account_blob_url = storage_account_blob_url
         self._storage_account_name = (
             storage_account_blob_url.split("//")[1].split(".")[0]
@@ -118,24 +132,18 @@ class BlobPipelineStorage(PipelineStorage):
                 An iterator of blob names and their corresponding regex matches.
         """
         base_dir = base_dir or ""
-        prefix_parts = []
 
-        sanitized_prefix = self._path_prefix.replace("\\", "/").strip("/")
-        sanitized_base_dir = base_dir.replace("\\", "/").strip("/")
+        sanitized_prefix = _normalize_segment(self._path_prefix)
+        sanitized_base_dir = _normalize_segment(base_dir)
 
-        if sanitized_prefix:
-            prefix_parts.append(sanitized_prefix)
+        if sanitized_base_dir and sanitized_prefix and sanitized_base_dir.startswith(
+            sanitized_prefix
+        ):
+            sanitized_base_dir = sanitized_base_dir[len(sanitized_prefix) :].lstrip("/")
 
-        if sanitized_base_dir:
-            if sanitized_prefix and sanitized_base_dir.startswith(sanitized_prefix):
-                remainder = sanitized_base_dir[len(sanitized_prefix) :].lstrip("/")
-                if remainder:
-                    prefix_parts.append(remainder)
-            else:
-                prefix_parts.append(sanitized_base_dir)
-        prefix = "/".join(prefix_parts)
-        if prefix and not prefix.endswith("/"):
-            prefix += "/"
+        prefix = _join_segments(segment for segment in [sanitized_prefix, sanitized_base_dir])
+        if prefix:
+            prefix = f"{prefix}/"
 
         log.info(
             "search container %s for files matching %s",
@@ -144,11 +152,15 @@ class BlobPipelineStorage(PipelineStorage):
         )
 
         def _blobname(blob_name: str) -> str:
-            if blob_name.startswith(self._path_prefix):
-                blob_name = blob_name.replace(self._path_prefix, "", 1)
-            if blob_name.startswith("/"):
-                blob_name = blob_name[1:]
-            return blob_name
+            normalized_name = blob_name.replace("\\", "/").lstrip("/")
+            normalized_prefix = _normalize_segment(self._path_prefix)
+            if normalized_prefix and normalized_name.startswith(
+                f"{normalized_prefix}/"
+            ):
+                normalized_name = normalized_name[len(normalized_prefix) + 1 :]
+            elif normalized_prefix and normalized_name == normalized_prefix:
+                normalized_name = ""
+            return normalized_name
 
         def item_filter(item: dict[str, Any]) -> bool:
             if file_filter is None:
@@ -294,7 +306,7 @@ class BlobPipelineStorage(PipelineStorage):
         """Create a child storage instance."""
         if name is None:
             return self
-        path = str(Path(self._path_prefix) / name)
+        path = _join_segments(segment for segment in [self._path_prefix, name])
         return BlobPipelineStorage(
             self._connection_string,
             self._container_name,
@@ -310,11 +322,14 @@ class BlobPipelineStorage(PipelineStorage):
 
     def _keyname(self, key: str) -> str:
         """Get the key name."""
-        return str(Path(self._path_prefix) / key)
+        joined = _join_segments(segment for segment in [self._path_prefix, key])
+        return joined
 
     def _abfs_url(self, key: str) -> str:
         """Get the ABFS URL."""
-        path = str(Path(self._container_name) / self._path_prefix / key)
+        path = _join_segments(
+            segment for segment in [self._container_name, self._path_prefix, key]
+        )
         return f"abfs://{path}"
 
     async def get_creation_date(self, key: str) -> str:
