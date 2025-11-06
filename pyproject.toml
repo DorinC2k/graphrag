@@ -78,6 +78,8 @@ pydantic = "^2.10.3"
 rich = "^13.9.4"
 devtools = "^0.12.2"
 typing-extensions = "^4.12.2"
+pytesseract = "^0.3.13"
+Pillow = "^10.3.0"
 
 # Azure
 azure-cosmos = "^4.9.0"
