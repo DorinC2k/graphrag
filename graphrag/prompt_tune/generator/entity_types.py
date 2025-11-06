@@ -53,7 +53,19 @@ async def generate_entity_types(
             json_model=EntityTypesResponse,
         )
         parsed_model = response.parsed_response
-        return parsed_model.entity_types if parsed_model else []
+        if parsed_model is None:
+            return []
+
+        if isinstance(parsed_model, BaseModel):
+            dump_method = getattr(parsed_model, "model_dump", None)
+            data = dump_method() if callable(dump_method) else parsed_model.dict()
+        elif isinstance(parsed_model, dict):
+            data = parsed_model
+        else:
+            return []
+
+        entity_types = data.get("entity_types")
+        return entity_types or []
 
     response = await model.achat(entity_types_prompt, history=history, json=json_mode)
     return str(response.output.content)
