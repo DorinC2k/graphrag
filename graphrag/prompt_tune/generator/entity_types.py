@@ -4,6 +4,7 @@
 """Entity type generation module for fine-tuning."""
 
 from pydantic import BaseModel
+from pydantic.errors import PydanticUserError
 
 from graphrag.language_model.protocol.base import ChatModel
 from graphrag.prompt_tune.defaults import DEFAULT_TASK
@@ -53,7 +54,42 @@ async def generate_entity_types(
             json_model=EntityTypesResponse,
         )
         parsed_model = response.parsed_response
-        return parsed_model.entity_types if parsed_model else []
+        if parsed_model is None:
+            return []
+
+        if isinstance(parsed_model, BaseModel):
+            data: dict | None = None
+
+            dump_method = getattr(parsed_model, "model_dump", None)
+            if callable(dump_method):
+                try:
+                    data = dump_method()
+                except (PydanticUserError, TypeError, AttributeError):
+                    data = None
+
+            if data is None:
+                dict_method = getattr(parsed_model, "dict", None)
+                if callable(dict_method):
+                    try:
+                        data = dict_method()
+                    except (TypeError, AttributeError):
+                        data = None
+
+            if data is None:
+                try:
+                    data = parsed_model.__dict__
+                except AttributeError:
+                    return []
+
+            if not isinstance(data, dict):
+                return []
+        elif isinstance(parsed_model, dict):
+            data = parsed_model
+        else:
+            return []
+
+        entity_types = data.get("entity_types")
+        return entity_types or []
 
     response = await model.achat(entity_types_prompt, history=history, json=json_mode)
     return str(response.output.content)
