@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import traceback
 from typing import TYPE_CHECKING, Any
@@ -61,6 +62,7 @@ class _OpenAIResponsesChatModel:
         self.config = config
         self._error_handler = _create_error_handler(callbacks) if callbacks else None
         self._use_azure_chat_completions = azure
+        self._cache = cache.child(name) if cache is not None else None
         if azure:
             client_kwargs: dict[str, Any] = {
                 "api_key": config.api_key,
@@ -87,6 +89,27 @@ class _OpenAIResponsesChatModel:
         self._model_identifier = (
             config.deployment_name if azure and config.deployment_name else config.model
         )
+
+    def _sanitize_for_cache(self, value: Any) -> Any:
+        if isinstance(value, dict):
+            return {str(k): self._sanitize_for_cache(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [self._sanitize_for_cache(v) for v in value]
+        if isinstance(value, tuple):
+            return [self._sanitize_for_cache(v) for v in value]
+        if isinstance(value, set):
+            return sorted(
+                (self._sanitize_for_cache(v) for v in value),
+                key=repr,
+            )
+        if isinstance(value, (str, int, float, bool)) or value is None:
+            return value
+        return repr(value)
+
+    def _build_cache_key(self, payload: dict[str, Any]) -> str:
+        normalized = self._sanitize_for_cache(payload)
+        serialized = json.dumps(normalized, sort_keys=True, ensure_ascii=False)
+        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
     @staticmethod
     def _normalize_history(history: list | None) -> list[dict[str, str]]:
@@ -218,6 +241,28 @@ class _OpenAIResponsesChatModel:
         if json_mode:
             request_kwargs["response_format"] = {"type": "json_object"}
 
+        cache_key: str | None = None
+        if self._cache is not None:
+            cache_payload = {
+                "azure_chat_completions": self._use_azure_chat_completions,
+                "model": self._model_identifier,
+                "request": request_kwargs,
+            }
+            cache_key = self._build_cache_key(cache_payload)
+            cached = await self._cache.get(cache_key)
+            if isinstance(cached, dict):
+                return BaseModelResponse(
+                    output=BaseModelOutput(
+                        content=str(cached.get("content", "")),
+                        full_response=cached.get("full_response", {}),
+                    ),
+                    parsed_response=cached.get("parsed_response"),
+                    history=cached.get("history", []),
+                    cache_hit=True,
+                    tool_calls=cached.get("tool_calls", []),
+                    metrics=cached.get("metrics"),
+                )
+
         try:
             if self._use_azure_chat_completions:
                 response = await self._client.chat.completions.create(**request_kwargs)
@@ -252,7 +297,7 @@ class _OpenAIResponsesChatModel:
         if response.usage is not None:
             metrics = {"usage": response.usage.model_dump()}
 
-        return BaseModelResponse(
+        base_response = BaseModelResponse(
             output=BaseModelOutput(
                 content=content or "",
                 full_response=response.model_dump(),
@@ -263,6 +308,24 @@ class _OpenAIResponsesChatModel:
             tool_calls=[],
             metrics=metrics,
         )
+
+        if self._cache is not None and cache_key is not None:
+            cache_value = {
+                "content": base_response.output.content,
+                "full_response": base_response.output.full_response,
+                "parsed_response": base_response.parsed_response,
+                "history": base_response.history,
+                "tool_calls": base_response.tool_calls,
+                "metrics": base_response.metrics,
+            }
+            debug_data = {
+                "azure_chat_completions": self._use_azure_chat_completions,
+                "model": self._model_identifier,
+                "request": self._sanitize_for_cache(request_kwargs),
+            }
+            await self._cache.set(cache_key, cache_value, debug_data)
+
+        return base_response
 
     async def achat_stream(
         self, prompt: str, history: list | None = None, **kwargs: Any
