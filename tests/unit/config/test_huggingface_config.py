@@ -20,6 +20,6 @@ def test_graph_rag_config_supports_hf_and_azure_chat():
     embed_model = config.get_language_model_config(defs.DEFAULT_EMBEDDING_MODEL_ID)
 
     assert chat_model.type == ModelType.AzureOpenAIChat
-    assert chat_model.model == "gpt-4o"
+    assert chat_model.model == "gpt-5-nano"
     assert embed_model.type == "huggingface_embedding"
     assert embed_model.model == "sentence-transformers/all-MiniLM-L6-v2"
