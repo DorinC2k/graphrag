@@ -8,6 +8,7 @@ from graphrag.cache.json_pipeline_cache import JsonPipelineCache
 from graphrag.storage.file_pipeline_storage import (
     FilePipelineStorage,
 )
+from pydantic import BaseModel
 
 TEMP_DIR = "./.tmp"
 
@@ -72,3 +73,17 @@ class TestFilePipelineCache(unittest.IsolatedAsyncioTestCase):
         assert await self.cache.get("test1") == test1
         assert await self.cache.get("test2") == test2
         assert await self.cache.get("test3") == test3
+
+    async def test_set_handles_pydantic_models(self):
+        class ExampleModel(BaseModel):
+            text: str
+            meta: dict[str, str] | None = None
+
+        value = ExampleModel(text="hello", meta={"source": "unit-test"})
+        await self.cache.set("model", value)
+        cached = await self.cache.get("model")
+        assert cached == value.model_dump()
+
+        debug = {"details": ExampleModel(text="debug", meta=None)}
+        await self.cache.set("model-debug", value, debug_data=debug)
+        assert await self.cache.get("model-debug") == value.model_dump()

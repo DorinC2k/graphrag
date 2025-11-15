@@ -3,8 +3,13 @@
 
 """A module containing 'JsonPipelineCache' model."""
 
+from __future__ import annotations
+
+import dataclasses
 import json
 from typing import Any
+
+from pydantic import BaseModel
 
 from graphrag.cache.pipeline_cache import PipelineCache
 from graphrag.storage.pipeline_storage import PipelineStorage
@@ -15,6 +20,28 @@ class JsonPipelineCache(PipelineCache):
 
     _storage: PipelineStorage
     _encoding: str
+
+    @staticmethod
+    def _make_json_serializable(value: Any) -> Any:
+        """Recursively convert values into JSON serializable objects."""
+
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        if dataclasses.is_dataclass(value):
+            return {
+                field.name: JsonPipelineCache._make_json_serializable(
+                    getattr(value, field.name)
+                )
+                for field in dataclasses.fields(value)
+            }
+        if isinstance(value, dict):
+            return {
+                str(key): JsonPipelineCache._make_json_serializable(val)
+                for key, val in value.items()
+            }
+        if isinstance(value, (list, tuple, set)):
+            return [JsonPipelineCache._make_json_serializable(item) for item in value]
+        return value
 
     def __init__(self, storage: PipelineStorage, encoding="utf-8"):
         """Init method definition."""
@@ -42,7 +69,7 @@ class JsonPipelineCache(PipelineCache):
         """Set method definition."""
         if value is None:
             return
-        data = {"result": value, **(debug_data or {})}
+        data = self._make_json_serializable({"result": value, **(debug_data or {})})
         await self._storage.set(
             key, json.dumps(data, ensure_ascii=False), encoding=self._encoding
         )
