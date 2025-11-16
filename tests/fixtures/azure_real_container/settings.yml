@@ -38,26 +38,24 @@ input:
     type: blob
     connection_string: ${LOCAL_BLOB_STORAGE_CONNECTION_STRING}
     container_name: law-cases
-    base_dir: md/csj/civil/2025/2025-02-10
+    base_dir: md/csj/civil/2025/2025-01-02
   file_type: text 
 
 cache:
   type: blob
   connection_string: ${BLOB_STORAGE_CONNECTION_STRING}
   container_name: cicache
-  base_dir: cache_azure_ai
+  base_dir: azure_real_container/cache_azure_ai
 
 output:
   type: blob
   connection_string: ${LOCAL_BLOB_STORAGE_CONNECTION_STRING}
   container_name: law-cases
-  base_dir: output
+  base_dir: azure_real_container/output
 
 reporting:
-  type: blob
-  connection_string: ${LOCAL_BLOB_STORAGE_CONNECTION_STRING}
-  container_name: law-cases
-  base_dir: reports
+  type: file # [file, blob, cosmosdb]
+  base_dir: azure_real_container/logs
   
 community_reports:
   graph_prompt: "prompts/community_report.txt"

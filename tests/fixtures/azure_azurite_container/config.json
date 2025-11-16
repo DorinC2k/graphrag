@@ -1,5 +1,5 @@
 {
-    "input_path": "./tests/fixtures/azure",
+    "input_path": "./tests/fixtures/azure_azurite_container",
     "input_file_type": "text",
     "workflow_config": {
         "skip_assert": true,

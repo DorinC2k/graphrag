@@ -5,7 +5,7 @@
 
 import os
 
-container_name = "data"
+container_name = "law-cases"
 blob_container_name = os.getenv("BLOB_CONTAINER_NAME", container_name)
 blob_account_name = os.getenv("BLOB_ACCOUNT_NAME")
 

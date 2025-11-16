@@ -48,7 +48,7 @@ WELL_KNOWN_AZURITE_CONNECTION_STRING = os.getenv(
     (
         "DefaultEndpointsProtocol=http;"
         "AccountName=devstoreaccount1;"
-        "AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/"
+        "AccountKey=insertKeyHere;"
         "K1SZFPTOtr/KBHBeksoGMGw==;"
         "BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1"
     )
@@ -66,7 +66,7 @@ env_vars = {
     "GRAPHRAG_CHUNK_SIZE": "1200",
     "GRAPHRAG_CHUNK_OVERLAP": "0",
     "GRAPHRAG_LLM_TYPE": "azure_openai_chat",
-    "GRAPHRAG_API_KEY": os.getenv("GRAPHRAG_API_KEY", "A8rMHLsf0lbEQfePHJ6RXgdx1OfTjev5DHZTmKT4s3l7yfAFFuIqJQQJ99BIACHYHv6XJ3w3AAAAACOGnVXk"),
+    "GRAPHRAG_API_KEY": os.getenv("GRAPHRAG_API_KEY", "insertKeyHere"),
     "GRAPHRAG_API_BASE": "https://ai-dorin2720ai095958338123.cognitiveservices.azure.com/",
     "GRAPHRAG_API_VERSION": "2025-08-07",
     "GRAPHRAG_LLM_DEPLOYMENT_NAME": "gpt-5-nano",
@@ -76,7 +76,7 @@ env_vars = {
     "GRAPHRAG_EMBEDDING_API_VERSION": "2",
     "GRAPHRAG_EMBEDDING_DEPLOYMENT_NAME": "sentence-transformers/all-MiniLM-L6-v2",
     "GRAPHRAG_EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2",
-    "HUGGINGFACE_API_TOKEN": os.getenv("HUGGINGFACE_API_TOKEN", "a"),
+    "HUGGINGFACE_API_TOKEN": os.getenv("HUGGINGFACE_API_TOKEN", "insertKeyHere"),
     "HUGGINGFACE_API_BASE": os.getenv("HUGGINGFACE_API_BASE", "https://cgglxt1hbsrcvegq.us-east-1.aws.endpoints.huggingface.cloud"),
     "HOME": safe_home,
     "NLTK_DATA": os.path.join(safe_home, "nltk_data"),

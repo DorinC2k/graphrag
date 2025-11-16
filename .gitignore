@@ -62,3 +62,5 @@ graphrag.iml
 *.venv*
 # Jupyter notebook
 .ipynb_checkpoints/
+# VS Code
+*.vscode/*
