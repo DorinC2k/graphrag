@@ -11,6 +11,7 @@ from io import BytesIO
 import pandas as pd
 import streamlit as st
 import yaml
+from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from knowledge_loader.data_sources.typing import Datasource
@@ -87,6 +88,46 @@ def load_blob_file(
     return stream
 
 
+def _log_missing_blob_details(dataset: str | None, filename: str) -> None:
+    """Log where a missing blob was expected and list siblings."""
+    expected_path = f"{dataset}/{filename}" if dataset else filename
+    logger.warning("Expected settings file at '%s' but it was not found", expected_path)
+
+    prefix = f"{dataset}/" if dataset else ""
+    display_prefix = prefix or "<root>"
+
+    if (
+        blob_container_name is None
+        or (blob_account_name is None and blob_connection_string is None)
+    ):
+        logger.warning(
+            "Cannot list blobs under '%s' because blob storage configuration is incomplete",
+            display_prefix,
+        )
+        return
+
+    try:
+        container_client = _get_container(
+            blob_account_name, blob_container_name, blob_connection_string
+        )
+        files = [
+            blob.name[len(prefix) :] if blob.name.startswith(prefix) else blob.name
+            for blob in container_client.list_blobs(name_starts_with=prefix)
+        ]
+        if not files:
+            logger.warning("No files found under '%s'", display_prefix)
+        else:
+            logger.warning(
+                "Files available under '%s': %s",
+                display_prefix,
+                ", ".join(sorted(files)),
+            )
+    except Exception as err:  # noqa: BLE001
+        logger.warning(
+            "Unable to list blobs under '%s' due to error: %s", display_prefix, err
+        )
+
+
 DEFAULT_CONFIG_FILENAMES = ("settings.yaml", "settings.yml", "settings.json")
 
 
@@ -132,6 +173,10 @@ class BlobDatasource(Datasource):
                 config = os.path.expandvars(str_settings)
                 settings_yaml = yaml.safe_load(config)
                 return create_graphrag_config(values=settings_yaml)
+            except ResourceNotFoundError as err:
+                _log_missing_blob_details(self._database, filename)
+                last_error = err
+                continue
             except Exception as err:  # noqa: BLE001
                 last_error = err
                 continue
