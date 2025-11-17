@@ -82,10 +82,10 @@ You can host Unified Search datasets locally or in a blob.
 
 ### 2. Azure Blob Storage
 1. If you want to use Azure Blob Storage, create a blob storage account with a "data" container and upload all your data and config as described above
-2. Run `az login` and select an account that has read permissions on that storage
-3. You need to tell the app what blob account to use using the following environment variable:
-- `BLOB_ACCOUNT_NAME` = `<blob_storage_name>`
-4. (optional) In your blob account you need to create a container where your projects live. We default this to `data` as mentioned in step one, but if you want to use something else you can set:
+2. Choose one of the following authentication methods:
+    - **Managed identity / `az login`**: run `az login` and select an account that has read permissions on the storage account. Then tell the app which account to use via `BLOB_ACCOUNT_NAME=<blob_storage_name>`.
+    - **Connection string**: set `BLOB_STORAGE_CONNECTION_STRING=<full_connection_string>` to use a shared key or SAS without calling `az login`.
+3. (optional) In your blob account you need to create a container where your projects live. We default this to `data` as mentioned in step one, but if you want to use something else you can set:
 - `BLOB_CONTAINER_NAME` = `<blob_container_with_projects>`
 
 
