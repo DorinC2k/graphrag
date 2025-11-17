@@ -26,6 +26,16 @@ logging.getLogger("azure").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
+def _normalize_dataset_path(dataset: str | None) -> str | None:
+    """Normalize dataset paths coming from listing.json entries."""
+
+    if dataset is None:
+        return None
+
+    normalized = dataset.strip().strip("/\\")
+    return normalized or None
+
+
 @st.cache_data(ttl=60 * 60 * 24)
 def _get_container(
     account_name: str | None,
@@ -44,19 +54,20 @@ def _get_container(
 
 
 def load_blob_prompt_config(
-    dataset: str,
+    dataset: str | None,
     account_name: str | None = blob_account_name,
     container_name: str | None = blob_container_name,
     connection_string: str | None = blob_connection_string,
 ) -> dict[str, str]:
     """Load blob prompt configuration."""
+    dataset = _normalize_dataset_path(dataset)
     if (account_name is None and connection_string is None) or container_name is None:
         return {}
 
     container_client = _get_container(account_name, container_name, connection_string)
     prompts = {}
 
-    prefix = f"{dataset}/prompts"
+    prefix = f"{dataset}/prompts" if dataset else "prompts"
     for file in container_client.list_blobs(name_starts_with=prefix):
         map_name = file.name.split("/")[-1].split(".")[0]
         prompts[map_name] = (
@@ -76,6 +87,8 @@ def load_blob_file(
     """Load blob file from container."""
     stream = io.BytesIO()
 
+    dataset = _normalize_dataset_path(dataset)
+
     if (account_name is None and connection_string is None) or container_name is None:
         logger.warning("No account name or container name provided")
         return stream
@@ -90,6 +103,8 @@ def load_blob_file(
 
 def _log_missing_blob_details(dataset: str | None, filename: str) -> None:
     """Log where a missing blob was expected and list siblings."""
+    dataset = _normalize_dataset_path(dataset)
+
     expected_path = f"{dataset}/{filename}" if dataset else filename
     logger.warning("Expected settings file at '%s' but it was not found", expected_path)
 
@@ -134,9 +149,9 @@ DEFAULT_CONFIG_FILENAMES = ("settings.yaml", "settings.yml", "settings.json")
 class BlobDatasource(Datasource):
     """Datasource that reads from a blob storage parquet file."""
 
-    def __init__(self, database: str):
+    def __init__(self, database: str | None):
         """Init method definition."""
-        self._database = database
+        self._database = _normalize_dataset_path(database)
 
     def read(
         self,
