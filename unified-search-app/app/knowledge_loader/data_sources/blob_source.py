@@ -87,6 +87,9 @@ def load_blob_file(
     return stream
 
 
+DEFAULT_CONFIG_FILENAMES = ("settings.yaml", "settings.yml", "settings.json")
+
+
 class BlobDatasource(Datasource):
     """Datasource that reads from a blob storage parquet file."""
 
@@ -114,23 +117,32 @@ class BlobDatasource(Datasource):
 
     def read_settings(
         self,
-        file: str,
+        file: str | None = None,
         throw_on_missing: bool = False,
     ) -> GraphRagConfig | None:
         """Read settings from container."""
-        try:
-            settings = load_blob_file(self._database, file)
-            settings.seek(0)
-            str_settings = settings.read().decode("utf-8")
-            config = os.path.expandvars(str_settings)
-            settings_yaml = yaml.safe_load(config)
-            graphrag_config = create_graphrag_config(values=settings_yaml)
-        except Exception as err:
-            if throw_on_missing:
-                error_msg = f"File {file} does not exist"
-                raise FileNotFoundError(error_msg) from err
+        filenames = [file] if file else list(DEFAULT_CONFIG_FILENAMES)
+        last_error: Exception | None = None
 
-            logger.warning("File %s does not exist", file)
-            return None
+        for filename in filenames:
+            try:
+                settings = load_blob_file(self._database, filename)
+                settings.seek(0)
+                str_settings = settings.read().decode("utf-8")
+                config = os.path.expandvars(str_settings)
+                settings_yaml = yaml.safe_load(config)
+                return create_graphrag_config(values=settings_yaml)
+            except Exception as err:  # noqa: BLE001
+                last_error = err
+                continue
 
-        return graphrag_config
+        if throw_on_missing:
+            missing = file if file else ", ".join(DEFAULT_CONFIG_FILENAMES)
+            error_msg = f"File {missing} does not exist"
+            if last_error is not None:
+                raise FileNotFoundError(error_msg) from last_error
+            raise FileNotFoundError(error_msg)
+
+        missing = file if file else ", ".join(DEFAULT_CONFIG_FILENAMES)
+        logger.warning("File %s does not exist", missing)
+        return None
