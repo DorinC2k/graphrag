@@ -26,16 +26,6 @@ logging.getLogger("azure").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-def _normalize_dataset_path(dataset: str | None) -> str | None:
-    """Normalize dataset paths coming from listing.json entries."""
-
-    if dataset is None:
-        return None
-
-    normalized = dataset.strip().strip("/\\")
-    return normalized or None
-
-
 @st.cache_data(ttl=60 * 60 * 24)
 def _get_container(
     account_name: str | None,
@@ -54,20 +44,19 @@ def _get_container(
 
 
 def load_blob_prompt_config(
-    dataset: str | None,
+    dataset: str,
     account_name: str | None = blob_account_name,
     container_name: str | None = blob_container_name,
     connection_string: str | None = blob_connection_string,
 ) -> dict[str, str]:
     """Load blob prompt configuration."""
-    dataset = _normalize_dataset_path(dataset)
     if (account_name is None and connection_string is None) or container_name is None:
         return {}
 
     container_client = _get_container(account_name, container_name, connection_string)
     prompts = {}
 
-    prefix = f"{dataset}/prompts" if dataset else "prompts"
+    prefix = f"{dataset}/prompts"
     for file in container_client.list_blobs(name_starts_with=prefix):
         map_name = file.name.split("/")[-1].split(".")[0]
         prompts[map_name] = (
@@ -87,24 +76,27 @@ def load_blob_file(
     """Load blob file from container."""
     stream = io.BytesIO()
 
-    dataset = _normalize_dataset_path(dataset)
-
     if (account_name is None and connection_string is None) or container_name is None:
         logger.warning("No account name or container name provided")
         return stream
 
     container_client = _get_container(account_name, container_name, connection_string)
+
+    # Ensure we have a valid file path to download
+    if file is None and dataset is None:
+        logger.warning("No file or dataset provided")
+        return stream
+
     blob_path = f"{dataset}/{file}" if dataset is not None else file
 
-    container_client.download_blob(blob_path).readinto(stream)
+    # blob_path is guaranteed to be a str here
+    container_client.download_blob(blob_path).readinto(stream) # type: ignore
 
     return stream
 
 
 def _log_missing_blob_details(dataset: str | None, filename: str) -> None:
     """Log where a missing blob was expected and list siblings."""
-    dataset = _normalize_dataset_path(dataset)
-
     expected_path = f"{dataset}/{filename}" if dataset else filename
     logger.warning("Expected settings file at '%s' but it was not found", expected_path)
 
@@ -143,15 +135,17 @@ def _log_missing_blob_details(dataset: str | None, filename: str) -> None:
         )
 
 
-DEFAULT_CONFIG_FILENAMES = ("settings.yaml", "settings.yml", "settings.json")
-
+DEFAULT_CONFIG_FILENAMES = ("settings.yaml", 
+                            "settings.yml", 
+                            "settings.json",
+                            "/mnt/c/development/sandbox-projects/rg-md-law-setup/gr-law/md-law/gr-output-run-4/settings.yaml")
 
 class BlobDatasource(Datasource):
     """Datasource that reads from a blob storage parquet file."""
 
-    def __init__(self, database: str | None):
+    def __init__(self, database: str):
         """Init method definition."""
-        self._database = _normalize_dataset_path(database)
+        self._database = database
 
     def read(
         self,
@@ -171,15 +165,17 @@ class BlobDatasource(Datasource):
 
         return pd.read_parquet(data, columns=columns)
 
+    # temp function to read settings from local storage
     def read_settings(
         self,
         file: str | None = None,
         throw_on_missing: bool = False,
     ) -> GraphRagConfig | None:
-        """Read settings from container."""
+        """Read settings from blob; if not found, try absolute local path."""
         filenames = [file] if file else list(DEFAULT_CONFIG_FILENAMES)
         last_error: Exception | None = None
 
+        # 1) Try to read from Blob, in order
         for filename in filenames:
             try:
                 settings = load_blob_file(self._database, filename)
@@ -193,16 +189,47 @@ class BlobDatasource(Datasource):
                 last_error = err
                 continue
             except Exception as err:  # noqa: BLE001
+                # Keep trying other candidate filenames
                 last_error = err
                 continue
 
+        # 2) Fallback: absolute local path only (as requested)
+        #    - If the caller provided an absolute path in `file`, try it.
+        #    - If `file` was not absolute or None, we only consider entries in
+        #      `filenames` that are absolute (per requirement: "via an absolute path").
+        for candidate in filenames:
+            if not candidate or not os.path.isabs(candidate):
+                continue  # only accept absolute paths for local fallback
+            try:
+                logger.info("Blob not found. Trying local absolute path: %s", candidate)
+                with open(candidate, "r", encoding="utf-8") as fh:
+                    str_settings = fh.read()
+                config = os.path.expandvars(str_settings)
+                settings_yaml = yaml.safe_load(config)
+                return create_graphrag_config(values=settings_yaml)
+            except FileNotFoundError as err:
+                logger.warning("Local file not found at absolute path: %s", candidate)
+                last_error = err
+                continue
+            except Exception as err:  # noqa: BLE001
+                logger.warning("Failed to load local settings from %s: %s", candidate, err)
+                last_error = err
+                continue
+
+        # 3) Nothing found -> handle error/reporting
         if throw_on_missing:
             missing = file if file else ", ".join(DEFAULT_CONFIG_FILENAMES)
-            error_msg = f"File {missing} does not exist"
+            error_msg = (
+                "Settings not found in blob and no valid absolute local path resolved "
+                f"for: {missing}"
+            )
             if last_error is not None:
                 raise FileNotFoundError(error_msg) from last_error
             raise FileNotFoundError(error_msg)
 
         missing = file if file else ", ".join(DEFAULT_CONFIG_FILENAMES)
-        logger.warning("File %s does not exist", missing)
+        logger.warning(
+            "Settings not found in blob and no valid absolute local path provided for: %s",
+            missing,
+        )
         return None
