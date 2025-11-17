@@ -59,12 +59,25 @@ def load_dataset_listing() -> list[DatasetConfig]:
             if datasets_str:
                 datasets = json.loads(datasets_str)
         except Exception as e:  # noqa: BLE001
-            print(f"Error loading dataset config: {e}")  # noqa T201
-            return []
+            message = (
+                "Failed to load dataset config from Azure Blob Storage. "
+                "Confirm `az login` succeeded and that your identity has access to the"
+                " configured storage account."
+            )
+            logger.exception(message)
+            raise RuntimeError(message) from e
     else:
         base_path = _get_base_path(None, local_data_root, LISTING_FILE)
-        with open(base_path, "r") as file:  # noqa: UP015, PTH123
-            datasets = json.load(file)
+        try:
+            with open(base_path, "r") as file:  # noqa: UP015, PTH123
+                datasets = json.load(file)
+        except FileNotFoundError as e:
+            message = (
+                "Could not find listing.json. Set DATA_ROOT to the folder that"
+                " contains your dataset directories and listing.json."
+            )
+            logger.error(message)
+            raise RuntimeError(message) from e
 
     return [DatasetConfig(**d) for d in datasets]
 

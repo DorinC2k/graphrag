@@ -36,7 +36,25 @@ def initialize() -> SessionVariables:
             page_title="GraphRAG",
         )
         sv = SessionVariables()
-        datasets = load_dataset_listing()
+        try:
+            datasets = load_dataset_listing()
+        except Exception as exc:  # noqa: BLE001
+            message = (
+                "Unified Search could not load any datasets. "
+                "Check the listing.json location/permissions or your Azure Blob credentials. "
+                f"Original error: {exc}"
+            )
+            st.error(message)
+            st.stop()
+
+        if not datasets:
+            message = (
+                "Unified Search did not find any datasets. Ensure listing.json references at"
+                " least one dataset directory and that DATA_ROOT or your blob settings are set."
+            )
+            st.error(message)
+            st.stop()
+
         sv.datasets.value = datasets
         sv.dataset.value = (
             st.query_params["dataset"].lower()
