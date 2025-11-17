@@ -18,7 +18,7 @@ from knowledge_loader.data_sources.typing import Datasource
 from graphrag.config.create_graphrag_config import create_graphrag_config
 from graphrag.config.models.graph_rag_config import GraphRagConfig
 
-from .default import blob_account_name, blob_container_name
+from .default import blob_account_name, blob_container_name, blob_connection_string
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("azure").setLevel(logging.WARNING)
@@ -26,12 +26,19 @@ logger = logging.getLogger(__name__)
 
 
 @st.cache_data(ttl=60 * 60 * 24)
-def _get_container(account_name: str, container_name: str) -> ContainerClient:
+def _get_container(
+    account_name: str | None,
+    container_name: str,
+    connection_string: str | None = None,
+) -> ContainerClient:
     """Return container from blob storage."""
     print("LOGIN---------------")  # noqa T201
-    account_url = f"https://{account_name}.blob.core.windows.net"
-    default_credential = DefaultAzureCredential()
-    blob_service_client = BlobServiceClient(account_url, credential=default_credential)
+    if connection_string:
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    else:
+        account_url = f"https://{account_name}.blob.core.windows.net"
+        default_credential = DefaultAzureCredential()
+        blob_service_client = BlobServiceClient(account_url, credential=default_credential)
     return blob_service_client.get_container_client(container_name)
 
 
@@ -39,12 +46,13 @@ def load_blob_prompt_config(
     dataset: str,
     account_name: str | None = blob_account_name,
     container_name: str | None = blob_container_name,
+    connection_string: str | None = blob_connection_string,
 ) -> dict[str, str]:
     """Load blob prompt configuration."""
-    if account_name is None or container_name is None:
+    if (account_name is None and connection_string is None) or container_name is None:
         return {}
 
-    container_client = _get_container(account_name, container_name)
+    container_client = _get_container(account_name, container_name, connection_string)
     prompts = {}
 
     prefix = f"{dataset}/prompts"
@@ -62,15 +70,16 @@ def load_blob_file(
     file: str | None,
     account_name: str | None = blob_account_name,
     container_name: str | None = blob_container_name,
+    connection_string: str | None = blob_connection_string,
 ) -> BytesIO:
     """Load blob file from container."""
     stream = io.BytesIO()
 
-    if account_name is None or container_name is None:
+    if (account_name is None and connection_string is None) or container_name is None:
         logger.warning("No account name or container name provided")
         return stream
 
-    container_client = _get_container(account_name, container_name)
+    container_client = _get_container(account_name, container_name, connection_string)
     blob_path = f"{dataset}/{file}" if dataset is not None else file
 
     container_client.download_blob(blob_path).readinto(stream)
