@@ -63,10 +63,23 @@ class LocalDatasource(Datasource):
 
     def read_settings(
         self,
-        file: str,
+        file: str | None = None,
         throw_on_missing: bool = False,
     ) -> GraphRagConfig | None:
         """Read settings file from local source."""
         cwd = Path(__file__).parent
         root_dir = (cwd / self._base_path).resolve()
-        return load_config(root_dir=root_dir)
+
+        config_path: Path | None = None
+        if file:
+            config_path = Path(file)
+            if not config_path.is_absolute():
+                config_path = root_dir / config_path
+            if not config_path.exists():
+                if throw_on_missing:
+                    error_msg = f"File {config_path} does not exist"
+                    raise FileNotFoundError(error_msg)
+                logger.warning("File %s does not exist", config_path)
+                return None
+
+        return load_config(root_dir=root_dir, config_filepath=config_path)

@@ -40,7 +40,7 @@ class Datasource(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def read_settings(self, file: str) -> GraphRagConfig | None:
+    def read_settings(self, file: str | None = None) -> GraphRagConfig | None:
         """Read settings method definition."""
         raise NotImplementedError
 

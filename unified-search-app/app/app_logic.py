@@ -74,7 +74,17 @@ def load_dataset(dataset: str, sv: SessionVariables):
     )
     if sv.dataset_config.value is not None:
         sv.datasource.value = create_datasource(f"{sv.dataset_config.value.path}")  # type: ignore
-        sv.graphrag_config.value = sv.datasource.value.read_settings("settings.yaml")
+        graphrag_config = sv.datasource.value.read_settings()
+        if graphrag_config is None:
+            dataset_path = sv.dataset_config.value.path
+            message = (
+                "Unified Search could not load the dataset settings. Ensure the dataset directory "
+                f"at '{dataset_path}' contains a GraphRAG settings file (settings.yaml, settings.yml, or settings.json)."
+            )
+            st.error(message)
+            st.stop()
+
+        sv.graphrag_config.value = graphrag_config
         load_knowledge_model(sv)
 
 
