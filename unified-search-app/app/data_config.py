@@ -10,6 +10,15 @@ communities_table = "output/communities"
 
 # name of the table in the graph-indexed data where the community reports are stored
 community_report_table = "output/community_reports"
+# fallback table names to try if the primary community report table is missing
+community_report_table_fallbacks = [
+    community_report_table,
+    # allow pointing the DATA_ROOT directly at the output directory
+    "community_reports",
+    # legacy name used by older pipeline runs
+    "output/create_final_community_reports",
+    "create_final_community_reports",
+]
 
 # name of the table in the graph-indexed data where the entity embeddings are stored
 entity_table = "output/entities"
