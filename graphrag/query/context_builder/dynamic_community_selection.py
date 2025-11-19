@@ -65,8 +65,11 @@ class DynamicCommunitySelection:
             if community.short_id in self.reports:
                 self.levels[community.level].append(community.short_id)
 
-        # start from root communities (level 0)
-        self.starting_communities = self.levels["0"]
+        if not self.levels:
+            msg = "DynamicCommunitySelection requires at least one community with a report"
+            raise ValueError(msg)
+
+        self.starting_level, self.starting_communities = self._determine_starting_level()
 
     async def select(self, query: str) -> tuple[list[CommunityReport], dict[str, Any]]:
         """
@@ -77,7 +80,7 @@ class DynamicCommunitySelection:
         """
         start = time()
         queue = deepcopy(self.starting_communities)
-        level = 0
+        level = self.starting_level
 
         ratings = {}  # store the ratings for each community
         llm_info: dict[str, Any] = {
@@ -170,3 +173,27 @@ class DynamicCommunitySelection:
 
         llm_info["ratings"] = ratings
         return community_reports, llm_info
+
+    def _determine_starting_level(self) -> tuple[int, list[str]]:
+        """Return the first available level (preferring 0) and its communities."""
+
+        if "0" in self.levels:
+            return 0, self.levels["0"]
+
+        numeric_levels: list[tuple[int, str]] = []
+        for level_key in self.levels:
+            try:
+                numeric_levels.append((int(level_key), level_key))
+            except (TypeError, ValueError):
+                continue
+
+        if numeric_levels:
+            numeric_levels.sort(key=lambda level_info: level_info[0])
+            first_numeric_level, level_key = numeric_levels[0]
+            return first_numeric_level, self.levels[level_key]
+
+        msg = (
+            "Community levels must be numeric strings. "
+            f"Found levels: {sorted(self.levels.keys())}"
+        )
+        raise ValueError(msg)
