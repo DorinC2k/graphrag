@@ -9,6 +9,7 @@ from graphrag.storage.file_pipeline_storage import (
     FilePipelineStorage,
 )
 from pydantic import BaseModel
+from pydantic.errors import PydanticUserError
 
 TEMP_DIR = "./.tmp"
 
@@ -87,3 +88,23 @@ class TestFilePipelineCache(unittest.IsolatedAsyncioTestCase):
         debug = {"details": ExampleModel(text="debug", meta=None)}
         await self.cache.set("model-debug", value, debug_data=debug)
         assert await self.cache.get("model-debug") == value.model_dump()
+
+    async def test_set_handles_base_pydantic_values(self):
+        class UndumpableModel(BaseModel):
+            val: str = "value"
+
+            def model_dump(self, *args, **kwargs):  # type: ignore[override]
+                raise PydanticUserError("cannot dump", code="base-model-instantiated")
+
+            def __str__(self) -> str:
+                return f"UndumpableModel(val={self.val})"
+
+        value = UndumpableModel()
+        await self.cache.set("undumpable", value)
+
+        assert await self.cache.get("undumpable") == str(value)
+
+        debug_data = {"debug": UndumpableModel(val="debug")}
+        await self.cache.set("undumpable-debug", "ok", debug_data=debug_data)
+
+        assert await self.cache.get("undumpable-debug") == "ok"
