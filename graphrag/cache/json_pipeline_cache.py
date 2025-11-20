@@ -30,7 +30,17 @@ class JsonPipelineCache(PipelineCache):
             try:
                 return value.model_dump()
             except PydanticUserError:
-                return str(value)
+                # BaseModel may be instantiated directly without fields; avoid
+                # using its __repr__ / __str__ because they can raise
+                # AttributeError for partially constructed models.
+                try:
+                    return {
+                        key: JsonPipelineCache._make_json_serializable(val)
+                        for key, val in vars(value).items()
+                        if not str(key).startswith("_")
+                    }
+                except Exception:
+                    return f"<{value.__class__.__name__}>"
         if dataclasses.is_dataclass(value):
             return {
                 field.name: JsonPipelineCache._make_json_serializable(
