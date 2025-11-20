@@ -10,6 +10,7 @@ import json
 from typing import Any
 
 from pydantic import BaseModel
+from pydantic.errors import PydanticUserError
 
 from graphrag.cache.pipeline_cache import PipelineCache
 from graphrag.storage.pipeline_storage import PipelineStorage
@@ -26,7 +27,10 @@ class JsonPipelineCache(PipelineCache):
         """Recursively convert values into JSON serializable objects."""
 
         if isinstance(value, BaseModel):
-            return value.model_dump()
+            try:
+                return value.model_dump()
+            except PydanticUserError:
+                return str(value)
         if dataclasses.is_dataclass(value):
             return {
                 field.name: JsonPipelineCache._make_json_serializable(
