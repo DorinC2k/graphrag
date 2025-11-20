@@ -3,11 +3,14 @@
 
 """All the steps to transform final entities."""
 
+import logging
 from uuid import uuid4
 
 import pandas as pd
 
 from graphrag.data_model.schemas import COMMUNITY_REPORTS_FINAL_COLUMNS
+
+log = logging.getLogger(__name__)
 
 
 def finalize_community_reports(
@@ -16,6 +19,15 @@ def finalize_community_reports(
 ) -> pd.DataFrame:
     """All the steps to transform final community reports."""
     if reports.empty:
+        if communities.empty:
+            log.warning(
+                "No communities were available for summarization; generated an empty community_reports table."
+            )
+        else:
+            log.warning(
+                "Summarization did not return any community reports for %s communities; generated an empty community_reports table.",
+                len(communities),
+            )
         return pd.DataFrame(columns=COMMUNITY_REPORTS_FINAL_COLUMNS)
 
     # Merge with communities to add shared fields
