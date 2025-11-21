@@ -91,7 +91,7 @@ class CommunityReportsExtractor:
                 json_model=CommunityReportResponse,  # A model is required when using json mode
             )
 
-            output = response.parsed_response
+            output = self._parse_llm_response(response)
         except Exception as e:
             log.exception("error generating community report")
             self._on_error(e, traceback.format_exc(), None)
@@ -101,6 +101,33 @@ class CommunityReportsExtractor:
             structured_output=output,
             output=text_output,
         )
+
+    @staticmethod
+    def _parse_llm_response(response: Any) -> CommunityReportResponse | None:
+        """Return a parsed response, falling back to JSON parsing when needed."""
+
+        if response is None:
+            return None
+
+        parsed = getattr(response, "parsed_response", None)
+        if parsed:
+            return parsed
+
+        raw_content = getattr(getattr(response, "output", None), "content", None)
+        if not raw_content:
+            return None
+
+        try:
+            json_payload = json.loads(raw_content)
+        except json.JSONDecodeError:
+            return None
+
+        try:
+            if hasattr(CommunityReportResponse, "model_validate"):
+                return CommunityReportResponse.model_validate(json_payload)
+            return CommunityReportResponse.parse_obj(json_payload)
+        except Exception:
+            return None
 
     def _format_prompt(self, prompt: str, values: dict[str, str]) -> str:
         """Safely substitute known placeholders in the prompt."""

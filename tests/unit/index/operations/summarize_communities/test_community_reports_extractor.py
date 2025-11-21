@@ -4,7 +4,10 @@ import json
 from pydantic import BaseModel
 from pydantic.errors import PydanticUserError
 
+from types import SimpleNamespace
+
 from graphrag.index.operations.summarize_communities.community_reports_extractor import (
+    CommunityReportResponse,
     CommunityReportsExtractor,
 )
 
@@ -47,3 +50,22 @@ def test_model_dump_json_handles_errors():
     dumped = CommunityReportsExtractor._model_dump_json(model)
 
     assert json.loads(dumped) == {"value": "ignored"}
+
+
+def test_parse_llm_response_uses_json_content_when_parsed_response_missing():
+    content = json.dumps(
+        {
+            "title": "Example",
+            "summary": "Summary",
+            "findings": [{"summary": "A", "explanation": "B"}],
+            "rating": 1,
+            "rating_explanation": "Because",
+        }
+    )
+    response = SimpleNamespace(parsed_response=None, output=SimpleNamespace(content=content))
+
+    parsed = CommunityReportsExtractor._parse_llm_response(response)
+
+    assert isinstance(parsed, CommunityReportResponse)
+    assert parsed.title == "Example"
+    assert parsed.summary == "Summary"
