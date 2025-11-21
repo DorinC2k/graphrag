@@ -140,7 +140,23 @@ class CommunityReportsExtractor:
 
         parsed = getattr(response, "parsed_response", None)
         if parsed:
-            return parsed
+            if isinstance(parsed, CommunityReportResponse):
+                return parsed
+
+            try:
+                if isinstance(parsed, dict):
+                    if hasattr(CommunityReportResponse, "model_validate"):
+                        return CommunityReportResponse.model_validate(parsed)
+                    return CommunityReportResponse.parse_obj(parsed)
+
+                if isinstance(parsed, str):
+                    loaded = json.loads(parsed)
+                    if hasattr(CommunityReportResponse, "model_validate"):
+                        return CommunityReportResponse.model_validate(loaded)
+                    return CommunityReportResponse.parse_obj(loaded)
+            except Exception:
+                # Fall back to parsing the raw content below when validation fails
+                pass
 
         raw_content = getattr(getattr(response, "output", None), "content", None)
         if not raw_content:
