@@ -107,7 +107,8 @@ class CommunityReportsExtractor:
                 getattr(response, "output", None), "content", None
             )
             log.debug(
-                "Received community report HTTP response",
+                "Received community report HTTP response: %s",
+                self._format_response_for_logging(response, raw_response_content),
                 extra={
                     "llm_response": {
                         "model": model_name,
@@ -156,6 +157,23 @@ class CommunityReportsExtractor:
             return CommunityReportResponse.parse_obj(json_payload)
         except Exception:
             return None
+
+    def _format_response_for_logging(
+        self, response: Any, raw_content: str | None
+    ) -> str:
+        """Return a string representation of the LLM response for logging."""
+
+        if raw_content:
+            return raw_content
+
+        try:
+            response_dict = self._model_dump(response)
+            if response_dict:
+                return json.dumps(response_dict, ensure_ascii=False)
+        except Exception:
+            pass
+
+        return repr(response)
 
     def _format_prompt(self, prompt: str, values: dict[str, str]) -> str:
         """Safely substitute known placeholders in the prompt."""
