@@ -140,11 +140,11 @@ def build_level_context(
     )
     valid_context_df = cast(
         "pd.DataFrame",
-        level_context_df[level_context_df[schemas.CONTEXT_EXCEED_FLAG] is False],
+        level_context_df[level_context_df[schemas.CONTEXT_EXCEED_FLAG] == False],
     )
     invalid_context_df = cast(
         "pd.DataFrame",
-        level_context_df[level_context_df[schemas.CONTEXT_EXCEED_FLAG] is True],
+        level_context_df[level_context_df[schemas.CONTEXT_EXCEED_FLAG] == True],
     )
 
     if invalid_context_df.empty:
