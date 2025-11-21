@@ -84,6 +84,18 @@ class CommunityReportsExtractor:
                     MAX_LENGTH_KEY: str(self._max_report_length),
                 },
             )
+            model_name = getattr(getattr(self._model, "config", None), "model", None)
+            log.debug(
+                "Sending community report HTTP request",
+                extra={
+                    "llm_request": {
+                        "model": model_name,
+                        "name": "create_community_report",
+                        "json": True,
+                        "prompt": prompt,
+                    }
+                },
+            )
             response = await self._model.achat(
                 prompt,
                 json=True,  # Leaving this as True to avoid creating new cache entries
