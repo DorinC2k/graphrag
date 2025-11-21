@@ -95,6 +95,15 @@ def build_level_context(
     - Check if local context fits within the limit, if yes use local context
     - If local context exceeds the limit, iteratively replace local context with sub-community reports, starting from the biggest sub-community
     """
+    level_dtype = local_context_df[schemas.COMMUNITY_LEVEL].dtype
+
+    def _coerce_level_dtype(df: pd.DataFrame) -> pd.DataFrame:
+        if not df.empty and schemas.COMMUNITY_LEVEL in df.columns:
+            df = df.copy()
+            df.loc[:, schemas.COMMUNITY_LEVEL] = df[schemas.COMMUNITY_LEVEL].astype(
+                level_dtype
+            )
+        return df
     if report_df is None or report_df.empty:
         # there is no report to substitute with, so we just trim the local context of the invalid context records
         # this case should only happen at the bottom level of the community hierarchy where there are no sub-communities
@@ -112,7 +121,7 @@ def build_level_context(
         )
 
         if invalid_context_df.empty:
-            return valid_context_df
+            return _coerce_level_dtype(valid_context_df)
 
         invalid_context_df.loc[:, [schemas.CONTEXT_STRING]] = invalid_context_df[
             schemas.ALL_CONTEXT
@@ -122,7 +131,7 @@ def build_level_context(
         ].apply(lambda x: num_tokens(x))
         invalid_context_df.loc[:, [schemas.CONTEXT_EXCEED_FLAG]] = False
 
-        return pd.concat([valid_context_df, invalid_context_df])
+        return _coerce_level_dtype(pd.concat([valid_context_df, invalid_context_df]))
 
     level_context_df = local_context_df[
         local_context_df[schemas.COMMUNITY_LEVEL] == level
@@ -132,7 +141,7 @@ def build_level_context(
     level_context_df = level_context_df.merge(
         report_df[[schemas.COMMUNITY_ID]],
         on=schemas.COMMUNITY_ID,
-        how="outer",
+        how="left",
         indicator=True,
     )
     level_context_df = level_context_df[level_context_df["_merge"] == "left_only"].drop(
@@ -226,6 +235,8 @@ def build_level_context(
     ).apply(lambda x: num_tokens(x))
     remaining_df[schemas.CONTEXT_EXCEED_FLAG] = False
 
-    return cast(
-        "pd.DataFrame", pd.concat([valid_context_df, community_df, remaining_df])
+    return _coerce_level_dtype(
+        cast(
+            "pd.DataFrame", pd.concat([valid_context_df, community_df, remaining_df])
+        )
     )
