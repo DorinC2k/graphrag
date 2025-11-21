@@ -103,6 +103,22 @@ class CommunityReportsExtractor:
                 json_model=CommunityReportResponse,  # A model is required when using json mode
             )
 
+            raw_response_content = getattr(
+                getattr(response, "output", None), "content", None
+            )
+            log.debug(
+                "Received community report HTTP response",
+                extra={
+                    "llm_response": {
+                        "model": model_name,
+                        "name": "create_community_report",
+                        "json": True,
+                        "response": self._model_dump(response),
+                        "raw_content": raw_response_content,
+                    }
+                },
+            )
+
             output = self._parse_llm_response(response)
         except Exception as e:
             log.exception("error generating community report")
