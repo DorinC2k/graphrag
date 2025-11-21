@@ -6,6 +6,9 @@
 import json
 from typing import Any
 
+from pydantic import BaseModel
+from pydantic.errors import PydanticUserError
+
 from graphrag.cache.pipeline_cache import PipelineCache
 from graphrag.storage.pipeline_storage import PipelineStorage
 
@@ -42,10 +45,23 @@ class JsonPipelineCache(PipelineCache):
         """Set method definition."""
         if value is None:
             return
-        data = {"result": value, **(debug_data or {})}
-        await self._storage.set(
-            key, json.dumps(data, ensure_ascii=False), encoding=self._encoding
-        )
+        serialized_value = value
+
+        if isinstance(value, BaseModel):
+            try:
+                serialized_value = value.model_dump()
+            except PydanticUserError:
+                serialized_value = str(value)
+
+        data = {"result": serialized_value, **(debug_data or {})}
+
+        try:
+            payload = json.dumps(data, ensure_ascii=False)
+        except TypeError:
+            data["result"] = str(serialized_value)
+            payload = json.dumps(data, ensure_ascii=False)
+
+        await self._storage.set(key, payload, encoding=self._encoding)
 
     async def has(self, key: str) -> bool:
         """Has method definition."""
