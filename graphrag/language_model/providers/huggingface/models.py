@@ -108,8 +108,21 @@ class HuggingFaceEmbeddingModel:
                 )
                 response.raise_for_status()
                 data = response.json()
+            except requests.HTTPError as e:  # pragma: no cover - network failures
+                status = e.response.status_code if e.response else "unknown"
+                error_detail = ""
+                if e.response is not None:
+                    try:
+                        error_detail = e.response.text
+                    except Exception:  # pragma: no cover - best effort diagnostic
+                        error_detail = ""
+                msg = (
+                    "HuggingFace embedding request failed "
+                    f"(status {status}). {error_detail}".strip()
+                )
+                raise RuntimeError(msg) from e
             except requests.RequestException as e:  # pragma: no cover - network failures
-                msg = "HuggingFace embedding request failed"
+                msg = f"HuggingFace embedding request failed: {e}"
                 raise RuntimeError(msg) from e
 
             if isinstance(data, dict):
