@@ -9,7 +9,10 @@ for backward compatibility.
 
 from typing import TYPE_CHECKING, Any
 import asyncio
+import importlib
 import os
+
+import numpy as np
 
 try:  # pragma: no cover - optional dependency handling
     import requests
@@ -65,6 +68,8 @@ class HuggingFaceEmbeddingModel:
             or os.getenv("HUGGINGFACEHUB_API_TOKEN")
             or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
         )
+        self.encoding_model = config.encoding_model
+        self.max_tokens_per_request = _get_max_tokens_per_request()
 
         if self.api_base:
             # Remote endpoint, no local model initialization
@@ -88,6 +93,12 @@ class HuggingFaceEmbeddingModel:
         return (await self.aembed_batch([text], **kwargs))[0]
 
     def embed_batch(self, text_list: list[str], **kwargs: Any) -> list[list[float]]:
+        prepared_texts, chunk_sizes = _prepare_embed_texts(
+            text_list,
+            self.encoding_model,
+            self.max_tokens_per_request,
+        )
+
         if self.api_base:
             if requests is None:  # pragma: no cover - optional dependency handling
                 raise ImportError(
@@ -103,7 +114,7 @@ class HuggingFaceEmbeddingModel:
                 response = requests.post(
                     self.api_base,
                     headers=headers,
-                    json={"inputs": text_list},
+                    json={"inputs": prepared_texts},
                     timeout=30,
                 )
                 response.raise_for_status()
@@ -126,11 +137,96 @@ class HuggingFaceEmbeddingModel:
                 raise RuntimeError(msg) from e
 
             if isinstance(data, dict):
-                return data.get("embeddings")
-            return data
+                embeddings = data.get("embeddings")
+            else:
+                embeddings = data
 
-        embeddings = self.model.encode(text_list, convert_to_numpy=True, **kwargs)
-        return embeddings.tolist()
+            return _reconstitute_embeddings(embeddings, chunk_sizes)
+
+        embeddings = self.model.encode(
+            prepared_texts, convert_to_numpy=True, **kwargs
+        )
+        return _reconstitute_embeddings(embeddings, chunk_sizes)
 
     def embed(self, text: str, **kwargs: Any) -> list[float]:
         return self.embed_batch([text], **kwargs)[0]
+
+
+def _get_max_tokens_per_request() -> int | None:
+    value = os.getenv("GRAPHRAG_EMBEDDING_TPR")
+    if value is None:
+        return None
+
+    try:
+        limit = int(value)
+    except ValueError:
+        return None
+
+    return limit if limit > 0 else None
+
+
+def _prepare_embed_texts(
+    text_list: list[str], encoding_model: str, max_tokens: int | None
+) -> tuple[list[str], list[int]]:
+    if max_tokens is None:
+        return text_list, [1 for _ in text_list]
+
+    if importlib.util.find_spec("tiktoken") is None:
+        msg = "tiktoken is required when GRAPHRAG_EMBEDDING_TPR is set"
+        raise ImportError(msg)
+
+    from graphrag.index.text_splitting.text_splitting import TokenTextSplitter
+
+    splitter = TokenTextSplitter(
+        encoding_name=encoding_model,
+        chunk_size=max_tokens,
+        chunk_overlap=0,
+    )
+
+    snippets: list[str] = []
+    sizes: list[int] = []
+
+    for text in text_list:
+        split_texts = splitter.split_text(text)
+        if split_texts is None:
+            sizes.append(0)
+            continue
+
+        split_texts = [item for item in split_texts if len(item) > 0]
+        sizes.append(len(split_texts))
+        snippets.extend(split_texts)
+
+    return snippets, sizes
+
+
+def _reconstitute_embeddings(
+    raw_embeddings: list[list[float]] | np.ndarray, sizes: list[int]
+) -> list[list[float] | None]:
+    if not sizes:
+        return []
+
+    embeddings: list[list[float] | None] = []
+    cursor = 0
+    for size in sizes:
+        if size == 0:
+            embeddings.append(None)
+            continue
+
+        chunk = raw_embeddings[cursor : cursor + size]
+        cursor += size
+
+        if size == 1:
+            first = chunk[0]
+            if isinstance(first, np.ndarray):
+                embeddings.append(first.tolist())
+            else:
+                embeddings.append(first)
+            continue
+
+        array = np.array(chunk, dtype=float)
+        average = array.mean(axis=0)
+        norm = np.linalg.norm(average)
+        normalized = average if norm == 0 else average / norm
+        embeddings.append(normalized.tolist())
+
+    return embeddings
