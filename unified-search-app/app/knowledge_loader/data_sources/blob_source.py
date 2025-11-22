@@ -7,6 +7,7 @@ import io
 import logging
 import os
 from io import BytesIO
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -24,6 +25,13 @@ from .default import blob_account_name, blob_container_name, blob_connection_str
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("azure").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+
+CACHE_ENV_VAR = "GRAPH_RAG_DATA_CACHE"
+DEFAULT_CACHE_ROOT = (
+    Path(os.environ.get(CACHE_ENV_VAR))
+    if os.environ.get(CACHE_ENV_VAR)
+    else Path.home() / ".cache" / "graphrag" / "datasets"
+)
 
 
 @st.cache_data(ttl=60 * 60 * 24)
@@ -146,6 +154,13 @@ class BlobDatasource(Datasource):
     def __init__(self, database: str):
         """Init method definition."""
         self._database = database
+        self._cache_root = (
+            Path(os.environ.get(CACHE_ENV_VAR))
+            if os.environ.get(CACHE_ENV_VAR)
+            else DEFAULT_CACHE_ROOT
+        )
+        self._cache_dir = self._cache_root / database
+        self._cache_dir.mkdir(parents=True, exist_ok=True)
 
     def read(
         self,
@@ -183,7 +198,9 @@ class BlobDatasource(Datasource):
                 str_settings = settings.read().decode("utf-8")
                 config = os.path.expandvars(str_settings)
                 settings_yaml = yaml.safe_load(config)
-                return create_graphrag_config(values=settings_yaml)
+                graphrag_config = create_graphrag_config(values=settings_yaml)
+                self._hydrate_vector_stores(graphrag_config)
+                return graphrag_config
             except ResourceNotFoundError as err:
                 _log_missing_blob_details(self._database, filename)
                 last_error = err
@@ -206,7 +223,9 @@ class BlobDatasource(Datasource):
                     str_settings = fh.read()
                 config = os.path.expandvars(str_settings)
                 settings_yaml = yaml.safe_load(config)
-                return create_graphrag_config(values=settings_yaml)
+                graphrag_config = create_graphrag_config(values=settings_yaml)
+                self._hydrate_vector_stores(graphrag_config)
+                return graphrag_config
             except FileNotFoundError as err:
                 logger.warning("Local file not found at absolute path: %s", candidate)
                 last_error = err
@@ -233,3 +252,73 @@ class BlobDatasource(Datasource):
             missing,
         )
         return None
+
+    def _build_blob_prefix(self, suffix: str | None = None) -> str:
+        parts = []
+        if self._database:
+            parts.append(self._database.strip("/"))
+        if suffix:
+            parts.append(suffix.strip("/"))
+        return "/".join(parts)
+
+    def _vector_store_cache_path(self) -> Path:
+        return self._cache_dir / "output" / "lancedb"
+
+    def _vector_store_cache_ready(self) -> bool:
+        cache_path = self._vector_store_cache_path()
+        if not cache_path.exists():
+            return False
+        return any(cache_path.rglob("*.lance"))
+
+    def _hydrate_vector_stores(self, config: GraphRagConfig | None) -> None:
+        if config is None:
+            return
+        if not config.vector_store:
+            return
+        needs_download = any(
+            store.type == "lancedb" for store in config.vector_store.values()
+        )
+        if not needs_download:
+            return
+        blob_prefix = self._build_blob_prefix("output/lancedb")
+        if not self._vector_store_cache_ready():
+            self._download_prefix(blob_prefix)
+        cache_path = self._vector_store_cache_path()
+        if not self._vector_store_cache_ready():
+            logger.warning(
+                "Unable to find LanceDB artifacts under prefix '%s'. Local searches will fail until the vector store is uploaded.",
+                blob_prefix,
+            )
+            return
+        for store in config.vector_store.values():
+            if store.type == "lancedb":
+                store.db_uri = str(cache_path)
+
+    def _download_prefix(self, prefix: str) -> None:
+        container_client = _get_container(
+            blob_account_name, blob_container_name, blob_connection_string
+        )
+        normalized_prefix = prefix.rstrip("/")
+        if normalized_prefix:
+            normalized_prefix = f"{normalized_prefix}/"
+        blobs = list(
+            container_client.list_blobs(name_starts_with=normalized_prefix)
+        )
+        if not blobs:
+            logger.info(
+                "No blobs found under prefix '%s', skipping cache hydration.",
+                normalized_prefix,
+            )
+            return
+        for blob in blobs:
+            relative_name = blob.name[len(normalized_prefix) :]
+            if not relative_name:
+                continue
+            local_path = self._vector_store_cache_path() / relative_name
+            if local_path.exists():
+                continue
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(local_path, "wb") as file_handle:
+                file_handle.write(
+                    container_client.download_blob(blob.name).readall()
+                )

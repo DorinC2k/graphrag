@@ -87,6 +87,7 @@ You can host Unified Search datasets locally or in a blob.
     - **Connection string**: set `BLOB_STORAGE_CONNECTION_STRING=<full_connection_string>` to use a shared key or SAS without calling `az login`.
 3. (optional) In your blob account you need to create a container where your projects live. We default this to `data` as mentioned in step one, but if you want to use something else you can set:
 - `BLOB_CONTAINER_NAME` = `<blob_container_with_projects>`
+4. The app downloads LanceDB vector-store files (and other cached artifacts) to a local cache directory so that semantic search can run against blob-hosted datasets. By default this cache is located at `~/.cache/graphrag/datasets/<dataset>`. You can override the location by setting `GRAPH_RAG_DATA_CACHE=/custom/cache/path` before launching the app.
 
 
 # Run the app
