@@ -96,6 +96,8 @@ class TokenTextSplitter(TextSplitter):
     ):
         """Init method definition."""
         super().__init__(**kwargs)
+        if not encoding_name:
+            encoding_name = defs.ENCODING_MODEL
         if model_name is not None:
             try:
                 enc = tiktoken.encoding_for_model(model_name)
