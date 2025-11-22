@@ -62,6 +62,18 @@ def get_community_report_data(
 ) -> pd.DataFrame:
     """Return a dataframe with community report data from the indexed-data."""
     report_df = _datasource.read(config.community_report_table)
+
+    # Attempt fallbacks when the primary table path is missing or empty
+    if report_df.empty:
+        for fallback in config.community_report_table_fallbacks:
+            if fallback == config.community_report_table:
+                continue
+
+            alt_df = _datasource.read(fallback)
+            if not alt_df.empty:
+                report_df = alt_df
+                break
+
     print(f"Report records: {len(report_df)}")  # noqa T201
 
     return report_df
