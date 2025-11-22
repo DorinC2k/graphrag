@@ -69,7 +69,14 @@ class HuggingFaceEmbeddingModel:
             or os.getenv("HUGGING_FACE_TOKEN_READ_KEY")
         )
         self.encoding_model = config.encoding_model
-        self.max_tokens_per_request = _get_max_tokens_per_request()
+        default_max_tokens = 256 if self.api_base else None
+        self.max_tokens_per_request = _get_max_tokens_per_request(
+            default_max_tokens
+        )
+
+        if self.max_tokens_per_request and importlib.util.find_spec("tiktoken") is None:
+            msg = "tiktoken is required for HuggingFace embeddings token splitting"
+            raise ImportError(msg)
 
         if self.api_base:
             # Remote endpoint, no local model initialization
@@ -152,10 +159,10 @@ class HuggingFaceEmbeddingModel:
         return self.embed_batch([text], **kwargs)[0]
 
 
-def _get_max_tokens_per_request() -> int | None:
+def _get_max_tokens_per_request(default: int | None = None) -> int | None:
     value = os.getenv("GRAPHRAG_EMBEDDING_TPR")
     if value is None:
-        return None
+        return default if default and default > 0 else None
 
     try:
         limit = int(value)
@@ -171,32 +178,45 @@ def _prepare_embed_texts(
     if max_tokens is None:
         return text_list, [1 for _ in text_list]
 
-    if importlib.util.find_spec("tiktoken") is None:
-        msg = "tiktoken is required when GRAPHRAG_EMBEDDING_TPR is set"
-        raise ImportError(msg)
+    return _split_texts_with_tokenizer(text_list, encoding_model, max_tokens)
 
-    from graphrag.index.text_splitting.text_splitting import TokenTextSplitter
 
-    splitter = TokenTextSplitter(
-        encoding_name=encoding_model,
-        chunk_size=max_tokens,
-        chunk_overlap=0,
-    )
+def _split_texts_with_tokenizer(
+    text_list: list[str], encoding_model: str, max_tokens: int
+) -> tuple[list[str], list[int]]:
+    import tiktoken
+
+    encoder = _get_token_encoder(tiktoken, encoding_model)
 
     snippets: list[str] = []
     sizes: list[int] = []
 
     for text in text_list:
-        split_texts = splitter.split_text(text)
-        if split_texts is None:
+        if not text:
             sizes.append(0)
             continue
 
-        split_texts = [item for item in split_texts if len(item) > 0]
-        sizes.append(len(split_texts))
-        snippets.extend(split_texts)
+        tokens = encoder.encode(text)
+        if not tokens:
+            sizes.append(0)
+            continue
+
+        chunks = [
+            encoder.decode(tokens[i : i + max_tokens])
+            for i in range(0, len(tokens), max_tokens)
+        ]
+
+        sizes.append(len(chunks))
+        snippets.extend(chunks)
 
     return snippets, sizes
+
+
+def _get_token_encoder(tiktoken_module: Any, encoding_model: str):
+    try:
+        return tiktoken_module.encoding_for_model(encoding_model)
+    except Exception:
+        return tiktoken_module.get_encoding(encoding_model)
 
 
 def _reconstitute_embeddings(

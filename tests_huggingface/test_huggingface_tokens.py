@@ -96,3 +96,49 @@ def test_huggingface_model_respects_token_limit(monkeypatch):
     assert len(captured_inputs) == 1
     assert len(captured_inputs[0]) > 1
     assert embeddings == [[1.0]]
+
+
+def test_huggingface_model_defaults_remote_token_limit(monkeypatch):
+    monkeypatch.delenv("GRAPHRAG_EMBEDDING_TPR", raising=False)
+    captured_inputs: list[list[str]] = []
+
+    class DummyEncoding:
+        def encode(self, text: str, allowed_special=None, disallowed_special=None):
+            return text.split()
+
+        def decode(self, tokens):
+            return " ".join(tokens)
+
+    import tiktoken
+
+    monkeypatch.setattr(tiktoken, "get_encoding", lambda name: DummyEncoding())
+    monkeypatch.setattr(tiktoken, "encoding_for_model", lambda model: DummyEncoding())
+
+    def fake_post(url, headers, json, timeout):
+        captured_inputs.append(json["inputs"])
+
+        class FakeResponse:
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"embeddings": [[float(idx)] for idx, _ in enumerate(json["inputs"])]}
+
+        return FakeResponse()
+
+    monkeypatch.setattr(
+        "graphrag.language_model.providers.huggingface.models.requests",
+        type("Requests", (), {"post": staticmethod(fake_post)}),
+    )
+
+    config = DummyConfig(api_base="https://example.endpoint")
+
+    model = HuggingFaceEmbeddingModel(name="hf", config=config)
+
+    long_text = "sample" + " sample" * 300
+    embeddings = model.embed_batch([long_text])
+
+    assert len(captured_inputs) == 1
+    assert len(captured_inputs[0]) > 1
+    assert all(len(item.split()) <= 256 for item in captured_inputs[0])
+    assert embeddings == [[1.0]]
